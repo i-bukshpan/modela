@@ -1,0 +1,17 @@
+# Local environment
+config/local.php
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# XAMPP / Local server
+error_log
+access_log
+*.log
+
+# Temp files
+tmp/
+temp/
