@@ -4,18 +4,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        <?php echo SITE_NAME; ?> —
-        <?php echo SITE_TAGLINE; ?>
-    </title>
-    <meta name="description"
-        content="מודלה — סטודיו יצירתי להדפסת תלת מימד. מדמיון למציאות תלת־ממדית. מוצרים בהתאמה אישית, אב טיפוס, מתנות ועוד.">
+    <?php
+    // Default metadata
+    $metaTitle = SITE_NAME . ' — ' . SITE_TAGLINE;
+    $metaDesc = "מודלה — סטודיו יצירתי להדפסת תלת מימד. מדמיון למציאות תלת־ממדית. מוצרים בהתאמה אישית, אב טיפוס, מתנות ועוד.";
+    $metaURL = SITE_URL . ($_SERVER['QUERY_STRING'] ? '?' . $_SERVER['QUERY_STRING'] : '');
+    $metaImage = SITE_URL . '/css/img/og-fallback.jpg'; // Need to ensure an image exists or is provided
+    
+    // If on product page, fetch metadata from Supabase via PHP if possible (or just use defaults)
+if (isset($metaProduct)) {
+    $metaTitle = $metaProduct['title'] . ' — ' . SITE_NAME;
+    if (!empty($metaProduct['description'])) {
+        $metaDesc = mb_strimwidth(strip_tags($metaProduct['description']), 0, 160, "...");
+    }
+    
+    // Find cover image
+    if (!empty($metaProduct['product_media'])) {
+        $cover = array_filter($metaProduct['product_media'], function($m) {
+            return isset($m['is_cover']) && $m['is_cover'];
+        });
+        $cover = !empty($cover) ? reset($cover) : $metaProduct['product_media'][0];
+        if (isset($cover['url'])) {
+            $metaImage = $cover['url'];
+        }
+    }
+}
+    ?>
+    <title><?php echo $metaTitle; ?></title>
+    <meta name="description" content="<?php echo $metaDesc; ?>">
     <meta name="keywords"
         content="הדפסת תלת מימד, 3D printing, מודלה, Modela, מוצרים מותאמים אישית, STL, מודלים תלת מימד, אב טיפוס">
-    <meta property="og:title" content="<?php echo SITE_NAME; ?> — <?php echo SITE_TAGLINE; ?>">
-    <meta property="og:description" content="מודלה — מדמיון למציאות תלת־ממדית. הדפסות תלת מימד בהתאמה אישית.">
+
+    <meta property="og:title" content="<?php echo $metaTitle; ?>">
+    <meta property="og:description" content="<?php echo $metaDesc; ?>">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="<?php echo SITE_URL; ?>">
+    <meta property="og:url" content="<?php echo $metaURL; ?>">
+    <meta property="og:image" content="<?php echo $metaImage; ?>">
+    <meta property="og:image:alt" content="<?php echo $metaTitle; ?>">
 
     <!-- Google Fonts: Heebo (Hebrew) + Montserrat & Poppins (English/Logo) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
