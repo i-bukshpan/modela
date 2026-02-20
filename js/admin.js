@@ -554,7 +554,8 @@ async function saveProduct(e, id) {
     for (let i = 0; i < newDownloadFiles.length; i++) {
         const file = newDownloadFiles[i];
         const ext = file.name.split('.').pop();
-        const path = `${productId}/${Date.now()}_${file.name}`;
+        const sanitizedName = sanitizeFilename(file.name);
+        const path = `${productId}/${Date.now()}_${sanitizedName}`;
 
         console.log(`Uploading file ${i + 1}/${newDownloadFiles.length}: ${file.name}`);
         const { data: uploadData, error: uploadError } = await db.storage.from('product-files').upload(path, file, { upsert: true });
@@ -604,6 +605,19 @@ async function deleteProduct(id) {
     await db.from('products').delete().eq('id', id);
     showToast('המוצר נמחק');
     loadProductsList();
+}
+
+// Helper: Sanitize filename for Supabase Storage paths
+function sanitizeFilename(filename) {
+    // Remove extension to sanitize name separately
+    const parts = filename.split('.');
+    const ext = parts.pop();
+    const name = parts.join('.');
+
+    // Replace non-alphanumeric (allowing some basics) with underscores
+    // We stay safe with ASCII for storage paths
+    const sanitized = name.replace(/[^\w-]/g, '_');
+    return sanitized + '.' + ext;
 }
 
 // ── Categories ──
