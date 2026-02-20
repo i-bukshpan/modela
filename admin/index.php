@@ -55,10 +55,16 @@
                 </a>
                 <div style="display:flex;align-items:center;gap:var(--space-md)">
                     <a href="<?php echo SITE_URL; ?>" class="btn btn-sm btn-secondary" target="_blank">
-                        <i data-lucide="external-link"></i> צפייה באתר
+                        <i data-lucide="external-link"></i>
+                        <span class="btn-text">צפייה באתר</span>
                     </a>
                     <button class="btn btn-sm btn-secondary" onclick="handleLogout()">
-                        <i data-lucide="log-out"></i> יציאה
+                        <i data-lucide="log-out"></i>
+                        <span class="btn-text">יציאה</span>
+                    </button>
+                    <!-- Mobile Sidebar Toggle -->
+                    <button class="admin-mobile-toggle" onclick="toggleAdminSidebar()" aria-label="תפריט ניהול">
+                        <i data-lucide="menu"></i>
                     </button>
                 </div>
             </div>
@@ -203,12 +209,11 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+            <div class="admin-overlay" id="adminOverlay" onclick="toggleAdminSidebar()"></div>
 
-    <script src="<?php echo SITE_URL; ?>/js/supabase-client.js"></script>
-    <script src="<?php echo SITE_URL; ?>/js/admin.js"></script>
-    <script>lucide.createIcons();</script>
+            <script src="<?php echo SITE_URL; ?>/js/supabase-client.js"></script>
+            <script src="<?php echo SITE_URL; ?>/js/admin.js"></script>
+            <script>lucide.createIcons();</script>
 </body>
 
 </html>

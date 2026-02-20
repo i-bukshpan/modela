@@ -141,13 +141,14 @@ CREATE POLICY "Public insert comments" ON comments FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public insert contact" ON contact_messages FOR INSERT WITH CHECK (true);
 
 -- Admin full access (authenticated users)
-CREATE POLICY "Admin full categories" ON categories FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full products" ON products FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full media" ON product_media FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full files" ON product_files FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full comments" ON comments FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full contact" ON contact_messages FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full settings" ON site_settings FOR ALL USING (auth.role() = 'authenticated');
+-- Using ALL + USING + WITH CHECK covers both filtering and existing/new records
+CREATE POLICY "Admin full categories" ON categories FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Admin full products" ON products FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Admin full media" ON product_media FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Admin full files" ON product_files FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Admin full comments" ON comments FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Admin full contact" ON contact_messages FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Admin full settings" ON site_settings FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
 
 -- ── Indexes ──
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);

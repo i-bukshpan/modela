@@ -242,12 +242,53 @@
 
 @media (max-width: 768px) {
     .admin-sidebar {
-        display: none;
+        right: -100%;
+        width: 280px;
+        transition: right var(--transition-base);
+        z-index: 2000;
+        display: block;
+        /* Show as block but positioned out of view */
+    }
+
+    .admin-sidebar.open {
+        right: 0;
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
     }
 
     .admin-main {
         margin-right: 0;
+        padding-top: var(--space-xl);
     }
+
+    .admin-mobile-toggle {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        cursor: pointer;
+    }
+
+    .admin-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 1999;
+        display: none;
+    }
+
+    .admin-overlay.active {
+        display: block;
+    }
+}
+
+.admin-mobile-toggle {
+    display: none;
 }
 
 /* ── Upload Section ── */

@@ -44,11 +44,26 @@ function showAdminApp() {
 }
 
 // ── Navigation ──
+function toggleAdminSidebar() {
+    const sidebar = document.querySelector('.admin-sidebar');
+    const overlay = document.getElementById('adminOverlay');
+    if (sidebar) {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+}
+
 function showSection(name, el) {
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
     document.getElementById('section-' + name).style.display = 'block';
     if (el) el.classList.add('active');
+
+    // Close sidebar on mobile after selection
+    if (window.innerWidth <= 768) {
+        document.querySelector('.admin-sidebar')?.classList.remove('open');
+        document.getElementById('adminOverlay')?.classList.remove('active');
+    }
 
     switch (name) {
         case 'dashboard': loadDashboard(); break;
@@ -487,7 +502,11 @@ async function saveProduct(e, id) {
     }
 
     if (error) {
-        alert('שגיאה: ' + error.message);
+        if (error.message.includes('row-level security')) {
+            alert('שגיאת הרשאות: אין לך הרשאה לבצע פעולה זו בטבלה. אנא וודא שהרצת את ה-SQL המעודכן ב-Supabase.');
+        } else {
+            alert('שגיאה: ' + error.message);
+        }
         saveBtn.disabled = false;
         saveBtn.innerHTML = '<i data-lucide="save"></i> שמור';
         return;

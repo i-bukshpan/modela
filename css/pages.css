@@ -1133,12 +1133,7 @@
     margin-bottom: var(--space-3xl);
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
-    margin-bottom: var(--space-md);
-}
+/* form-row is already defined above, no need for duplicate with same properties */
 
 .comment-list {
     display: flex;
