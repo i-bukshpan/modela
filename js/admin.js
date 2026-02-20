@@ -494,19 +494,21 @@ async function saveProduct(e, id) {
     let error;
 
     if (id) {
+        console.log('Updating product:', id);
         ({ error } = await db.from('products').update(productData).eq('id', id));
     } else {
+        console.log('Inserting new product...');
         const result = await db.from('products').insert(productData).select('id').single();
         error = result.error;
-        if (result.data) productId = result.data.id;
+        if (result.data) {
+            productId = result.data.id;
+            console.log('New product ID:', productId);
+        }
     }
 
-    if (error) {
-        if (error.message.includes('row-level security')) {
-            alert('שגיאת הרשאות: אין לך הרשאה לבצע פעולה זו בטבלה. אנא וודא שהרצת את ה-SQL המעודכן ב-Supabase.');
-        } else {
-            alert('שגיאה: ' + error.message);
-        }
+    if (error || !productId) {
+        console.error('Initial save error:', error);
+        alert('שגיאה בשמירת המוצר: ' + (error?.message || 'לא התקבל מזהה מוצר'));
         saveBtn.disabled = false;
         saveBtn.innerHTML = '<i data-lucide="save"></i> שמור';
         return;
@@ -519,6 +521,7 @@ async function saveProduct(e, id) {
 
     // Upload new media files
     const newMediaFiles = pendingMediaFiles.filter(f => f !== null);
+    if (newMediaFiles.length > 0) console.log(`Uploading ${newMediaFiles.length} new media files...`);
     for (let i = 0; i < newMediaFiles.length; i++) {
         const file = newMediaFiles[i];
         const isVideo = file.type.startsWith('video/');
@@ -532,39 +535,49 @@ async function saveProduct(e, id) {
             const { data: urlData } = db.storage.from(bucket).getPublicUrl(path);
             const isCover = pendingMediaFiles._coverIdx === pendingMediaFiles.indexOf(file);
 
-            await db.from('product_media').insert({
+            const { error: insertError } = await db.from('product_media').insert({
                 product_id: productId,
                 url: urlData.publicUrl,
                 type: isVideo ? 'video' : 'image',
                 is_cover: isCover,
                 sort_order: existingMedia.length + i
             });
+            if (insertError) console.error('Media DB record error:', insertError);
         } else {
-            console.error('Upload error:', uploadError);
+            console.error('Media upload error:', uploadError);
         }
     }
 
     // Upload new downloadable files
     const newDownloadFiles = pendingDownloadFiles.filter(f => f !== null);
+    if (newDownloadFiles.length > 0) console.log(`Uploading ${newDownloadFiles.length} new downloadable files...`);
     for (let i = 0; i < newDownloadFiles.length; i++) {
         const file = newDownloadFiles[i];
         const ext = file.name.split('.').pop();
         const path = `${productId}/${Date.now()}_${file.name}`;
 
+        console.log(`Uploading file ${i + 1}/${newDownloadFiles.length}: ${file.name}`);
         const { data: uploadData, error: uploadError } = await db.storage.from('product-files').upload(path, file, { upsert: true });
 
         if (!uploadError) {
             const { data: urlData } = db.storage.from('product-files').getPublicUrl(path);
 
-            await db.from('product_files').insert({
+            const { error: insertError } = await db.from('product_files').insert({
                 product_id: productId,
                 filename: file.name,
                 file_url: urlData.publicUrl,
                 file_size: file.size,
                 file_type: ext.toUpperCase()
             });
+            if (insertError) {
+                console.error('File DB record error:', insertError);
+                alert(`הקובץ ${file.name} הועלה אך לא נרשם במסד הנתונים: ${insertError.message}`);
+            } else {
+                console.log(`Successfully saved file: ${file.name}`);
+            }
         } else {
-            console.error('File upload error:', uploadError);
+            console.error('File storage upload error:', uploadError);
+            alert(`שגיאה בהעלאת הקובץ ${file.name}: ${uploadError.message}`);
         }
     }
 

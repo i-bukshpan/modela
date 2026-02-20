@@ -71,7 +71,15 @@ $productSlug = isset($_GET['slug']) ? htmlspecialchars($_GET['slug']) : '';
 
         const product = await fetchProduct(slug);
         if (!product) {
-            // ... (keep error handling)
+            document.getElementById('productLayout').innerHTML = `
+                <div class="empty-state" style="grid-column:1/-1">
+                    <i data-lucide="package-x"></i>
+                    <h3>המוצר לא נמצא</h3>
+                    <p>ייתכן שהמוצר הוסר או שהקישור שגוי</p>
+                    <a href="?page=gallery" class="btn btn-primary" style="margin-top:var(--space-lg)">חזרה לגלריה</a>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
             return;
         }
 
@@ -83,8 +91,31 @@ $productSlug = isset($_GET['slug']) ? htmlspecialchars($_GET['slug']) : '';
         // Set comment form product ID
         document.getElementById('commentForm').setAttribute('data-product-id', product.id);
 
-        // Build media slider (keep original logic)
-        // ...
+        // Build media slider
+        const sliderMain = document.getElementById('sliderMain');
+        const thumbs = document.getElementById('sliderThumbs');
+        const media = (product.product_media || []).sort((a, b) => a.sort_order - b.sort_order);
+
+        if (media.length > 0) {
+            sliderMain.innerHTML = media.map((m, i) => {
+                if (m.type === 'video') {
+                    return `<div class="slider-slide" style="display:${i === 0 ? 'flex' : 'none'}">
+                    <video src="${m.url}" controls playsinline></video>
+                </div>`;
+                }
+                return `<div class="slider-slide" style="display:${i === 0 ? 'flex' : 'none'}">
+                <img src="${m.url || ''}" alt="${product.title}">
+            </div>`;
+            }).join('');
+
+            thumbs.innerHTML = media.map((m, i) => `
+            <div class="slider-thumb ${i === 0 ? 'active' : ''}">
+                <img src="${m.type === 'video' ? m.url : m.url}" alt="Thumbnail ${i + 1}">
+            </div>
+        `).join('');
+        } else {
+            sliderMain.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted)">אין מדיה</div>';
+        }
 
         // Build product info
         const catPath = product.categories
@@ -121,20 +152,29 @@ $productSlug = isset($_GET['slug']) ? htmlspecialchars($_GET['slug']) : '';
 
         let infoHTML = `
         <div class="product-category-path">${catPath}</div>
-        <div class="product-header-row" style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-md);margin-bottom:var(--space-sm)">
+        <div class="product-header-row" style="margin-bottom:var(--space-md)">
             <h1 style="margin:0">${product.title}</h1>
-            <button class="like-btn ${isLiked ? 'active' : ''}" onclick="handleLike(this, '${product.id}')" title="אהבתי">
-                <i data-lucide="heart" ${isLiked ? 'fill="currentColor"' : ''}></i>
-                <span class="like-count">${product.like_count || 0}</span>
-            </button>
         </div>
         
         <div class="product-meta-stats" style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);color:var(--text-muted);font-size:0.85rem">
-            <span><i data-lucide="eye" style="width:14px;height:14px;vertical-align:middle;margin-left:4px"></i> ${product.view_count || 0} צפיות</span>
             <span><i data-lucide="calendar" style="width:14px;height:14px;vertical-align:middle;margin-left:4px"></i> פורסם ב-${new Date(product.created_at).toLocaleDateString('he-IL')}</span>
         </div>
 
-        ${priceHTML}
+        <div class="product-actions-bar" style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-md);margin-bottom:var(--space-xl);padding:var(--space-md);background:var(--bg-glass);border:1px solid var(--border-glass);border-radius:var(--radius-lg)">
+            ${priceHTML}
+            <div style="display:flex;align-items:center;gap:var(--space-md)">
+                <div class="stat-badge" title="צפיות" style="display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:0.9rem">
+                    <i data-lucide="eye" style="width:18px;height:18px"></i>
+                    <span>${product.view_count || 0}</span>
+                </div>
+                <button class="btn ${isLiked ? 'btn-primary' : 'btn-secondary'} like-btn-enhanced" onclick="handleLike(event, '${product.id}')" style="display:flex;align-items:center;gap:var(--space-sm);padding:8px 20px;border-radius:var(--radius-full)">
+                    <i data-lucide="heart" ${isLiked ? 'fill="currentColor"' : ''} style="width:20px;height:20px"></i>
+                    <span class="like-label">${isLiked ? 'אהבתי' : 'אהבתי'}</span>
+                    <span class="like-count" style="font-weight:700">${product.like_count || 0}</span>
+                </button>
+            </div>
+        </div>
+
         <p class="product-description">${product.description || ''}</p>
     `;
 
@@ -182,7 +222,6 @@ $productSlug = isset($_GET['slug']) ? htmlspecialchars($_GET['slug']) : '';
     `;
 
         document.getElementById('productInfo').innerHTML = infoHTML;
-        // ... (title, related, comments etc.)
 
         // Update page title
         document.title = product.title + ' — מודלה';
@@ -199,11 +238,6 @@ $productSlug = isset($_GET['slug']) ? htmlspecialchars($_GET['slug']) : '';
         if (typeof lucide !== 'undefined') lucide.createIcons();
         initMediaSlider();
         initShareButtons();
-    });
-
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    initMediaSlider();
-    initShareButtons();
     });
 
     // ── Comment Management ──

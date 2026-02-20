@@ -160,6 +160,12 @@ async function incrementProductLike(productId) {
     await db.rpc('increment_like', { product_id: productId });
 }
 
+async function decrementProductLike(productId) {
+    const db = getSupabase();
+    if (!db) return;
+    await db.rpc('decrement_like', { product_id: productId });
+}
+
 // Helper: fetch site statistics
 async function fetchStats() {
     const db = getSupabase();

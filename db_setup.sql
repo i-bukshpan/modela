@@ -114,14 +114,21 @@ RETURNS VOID AS $$
 BEGIN
     UPDATE products SET view_count = view_count + 1 WHERE id = product_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION increment_like(product_id UUID)
 RETURNS VOID AS $$
 BEGIN
     UPDATE products SET like_count = like_count + 1 WHERE id = product_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION decrement_like(product_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE products SET like_count = GREATEST(0, like_count - 1) WHERE id = product_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ── Row Level Security ──
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;

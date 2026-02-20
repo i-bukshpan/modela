@@ -151,25 +151,42 @@ function formatDateHe(dateStr) {
 async function handleLike(e, productId) {
     if (e) e.stopPropagation();
     const btn = e.currentTarget || e;
-    if (btn.classList.contains('active')) return;
+    const isActive = btn.classList.contains('active');
 
     const likedProducts = JSON.parse(localStorage.getItem('liked_products') || '[]');
-    if (likedProducts.includes(productId)) return;
-
-    btn.classList.add('active');
     const countSpan = btn.querySelector('.like-count');
-    if (countSpan) countSpan.textContent = parseInt(countSpan.textContent) + 1;
     const icon = btn.querySelector('i');
-    if (icon) icon.setAttribute('fill', 'currentColor');
 
-    likedProducts.push(productId);
-    localStorage.setItem('liked_products', JSON.stringify(likedProducts));
+    if (isActive) {
+        // Unlike
+        btn.classList.remove('active');
+        if (countSpan) countSpan.textContent = Math.max(0, parseInt(countSpan.textContent) - 1);
+        if (icon) icon.removeAttribute('fill');
 
-    if (typeof incrementProductLike === 'function') {
-        await incrementProductLike(productId);
-    }
-    if (typeof showToast === 'function') {
-        showToast('תודה! שמחים שאהבת', 'heart');
+        const index = likedProducts.indexOf(productId);
+        if (index > -1) likedProducts.splice(index, 1);
+        localStorage.setItem('liked_products', JSON.stringify(likedProducts));
+
+        if (typeof decrementProductLike === 'function') {
+            await decrementProductLike(productId);
+        }
+    } else {
+        // Like
+        btn.classList.add('active');
+        if (countSpan) countSpan.textContent = parseInt(countSpan.textContent) + 1;
+        if (icon) icon.setAttribute('fill', 'currentColor');
+
+        if (!likedProducts.includes(productId)) {
+            likedProducts.push(productId);
+            localStorage.setItem('liked_products', JSON.stringify(likedProducts));
+        }
+
+        if (typeof incrementProductLike === 'function') {
+            await incrementProductLike(productId);
+        }
+        if (typeof showToast === 'function') {
+            showToast('תודה! שמחים שאהבת', 'heart');
+        }
     }
 }
 
