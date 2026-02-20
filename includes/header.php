@@ -8,27 +8,29 @@
     // Default metadata
     $metaTitle = SITE_NAME . ' — ' . SITE_TAGLINE;
     $metaDesc = "מודלה — סטודיו יצירתי להדפסת תלת מימד. מדמיון למציאות תלת־ממדית. מוצרים בהתאמה אישית, אב טיפוס, מתנות ועוד.";
-    $metaURL = SITE_URL . ($_SERVER['QUERY_STRING'] ? '?' . $_SERVER['QUERY_STRING'] : '');
+    // Ensure metaURL is absolute
+    $currentURL = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    $metaURL = $currentURL;
     $metaImage = SITE_URL . '/css/img/og-fallback.jpg'; // Need to ensure an image exists or is provided
     
     // If on product page, fetch metadata from Supabase via PHP if possible (or just use defaults)
-if (isset($metaProduct)) {
-    $metaTitle = $metaProduct['title'] . ' — ' . SITE_NAME;
-    if (!empty($metaProduct['description'])) {
-        $metaDesc = mb_strimwidth(strip_tags($metaProduct['description']), 0, 160, "...");
-    }
-    
-    // Find cover image
-    if (!empty($metaProduct['product_media'])) {
-        $cover = array_filter($metaProduct['product_media'], function($m) {
-            return isset($m['is_cover']) && $m['is_cover'];
-        });
-        $cover = !empty($cover) ? reset($cover) : $metaProduct['product_media'][0];
-        if (isset($cover['url'])) {
-            $metaImage = $cover['url'];
+    if (isset($metaProduct)) {
+        $metaTitle = $metaProduct['title'] . ' — ' . SITE_NAME;
+        if (!empty($metaProduct['description'])) {
+            $metaDesc = mb_strimwidth(strip_tags($metaProduct['description']), 0, 160, "...");
+        }
+
+        // Find cover image
+        if (!empty($metaProduct['product_media'])) {
+            $cover = array_filter($metaProduct['product_media'], function ($m) {
+                return isset($m['is_cover']) && $m['is_cover'];
+            });
+            $cover = !empty($cover) ? reset($cover) : $metaProduct['product_media'][0];
+            if (isset($cover['url'])) {
+                $metaImage = $cover['url'];
+            }
         }
     }
-}
     ?>
     <title><?php echo $metaTitle; ?></title>
     <meta name="description" content="<?php echo $metaDesc; ?>">

@@ -147,6 +147,32 @@ function formatDateHe(dateStr) {
     });
 }
 
+// ── Like Logic (Global) ──
+async function handleLike(e, productId) {
+    if (e) e.stopPropagation();
+    const btn = e.currentTarget || e;
+    if (btn.classList.contains('active')) return;
+
+    const likedProducts = JSON.parse(localStorage.getItem('liked_products') || '[]');
+    if (likedProducts.includes(productId)) return;
+
+    btn.classList.add('active');
+    const countSpan = btn.querySelector('.like-count');
+    if (countSpan) countSpan.textContent = parseInt(countSpan.textContent) + 1;
+    const icon = btn.querySelector('i');
+    if (icon) icon.setAttribute('fill', 'currentColor');
+
+    likedProducts.push(productId);
+    localStorage.setItem('liked_products', JSON.stringify(likedProducts));
+
+    if (typeof incrementProductLike === 'function') {
+        await incrementProductLike(productId);
+    }
+    if (typeof showToast === 'function') {
+        showToast('תודה! שמחים שאהבת', 'heart');
+    }
+}
+
 // ── Create product card HTML ──
 function createProductCard(product) {
     const coverMedia = product.product_media?.find(m => m.is_cover) || product.product_media?.[0];
@@ -154,6 +180,8 @@ function createProductCard(product) {
     const mediaUrl = coverMedia?.url || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect fill="%2314142e" width="400" height="300"/><text x="200" y="150" fill="%23686888" text-anchor="middle" font-family="sans-serif" font-size="16">אין תמונה</text></svg>';
     const categoryName = product.categories?.name || '';
     const slug = product.slug || product.id;
+    const likedProducts = JSON.parse(localStorage.getItem('liked_products') || '[]');
+    const isLiked = likedProducts.includes(product.id);
 
     let priceHTML = '';
     if (product.price) {
@@ -186,11 +214,16 @@ function createProductCard(product) {
                         <div style="display:flex;align-items:center;gap:var(--space-sm)">
                             ${categoryName ? `<span class="badge">${categoryName}</span>` : ''}
                             ${commentHTML}
+                            <span class="badge badge-outline"><i data-lucide="eye" style="width:12px;height:12px;margin-left:4px"></i>${product.view_count || 0}</span>
                         </div>
                         ${priceHTML}
                     </div>
                 </div>
                 <div class="item-actions">
+                    <button class="item-action-btn like-btn ${isLiked ? 'active' : ''}" onclick="handleLike(event, '${product.id}')" title="אהבתי">
+                        <i data-lucide="heart" ${isLiked ? 'fill="currentColor"' : ''}></i>
+                        <span class="like-count" style="font-size:0.75rem;margin-right:2px">${product.like_count || 0}</span>
+                    </button>
                     <button class="item-action-btn" onclick="event.stopPropagation();shareProduct('${slug}','${product.title}')" title="שיתוף">
                         <i data-lucide="share-2"></i>
                     </button>

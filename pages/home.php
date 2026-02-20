@@ -140,44 +140,52 @@
         const statProducts = document.querySelector('.hero-stat:nth-child(1) .stat-number');
         const statCustomers = document.querySelector('.hero-stat:nth-child(2) .stat-number');
         const statFiles = document.querySelector('.hero-stat:nth-child(3) .stat-number');
-        
+
         if (statProducts) statProducts.setAttribute('data-count', stats.products || 0);
         if (statCustomers) statCustomers.setAttribute('data-count', stats.customers || 0);
         if (statFiles) statFiles.setAttribute('data-count', stats.files || 0);
-        
+
         // Re-trigger counters
         initCounters();
 
         // Load featured products
         const featured = await fetchProducts({ featured: true, limit: 8 });
         const container = document.getElementById('featuredScroll');
-        if (container && featured.length > 0) {
-            container.innerHTML = featured.map(product => {
-                const cover = product.product_media?.find(m => m.is_cover) || product.product_media?.[0];
-                const imgUrl = cover?.url || '';
-                const slug = product.slug || product.id;
-                let priceHTML = '';
-                if (product.price) {
-                    if (product.sale_price) {
-                        priceHTML = `
+        container.innerHTML = featured.map(product => {
+            const cover = product.product_media?.find(m => m.is_cover) || product.product_media?.[0];
+            const imgUrl = cover?.url || '';
+            const slug = product.slug || product.id;
+            const likedProducts = JSON.parse(localStorage.getItem('liked_products') || '[]');
+            const isLiked = likedProducts.includes(product.id);
+
+            let priceHTML = '';
+            if (product.price) {
+                if (product.sale_price) {
+                    priceHTML = `
                             <div class="card-price sale">
                                 <span class="old-price">₪${product.price}</span>
                                 <span class="current-price">₪${product.sale_price}</span>
                             </div>
                         `;
-                    } else {
-                        priceHTML = `<div class="card-price"><span class="current-price">₪${product.price}</span></div>`;
-                    }
+                } else {
+                    priceHTML = `<div class="card-price"><span class="current-price">₪${product.price}</span></div>`;
                 }
+            }
 
-                const commentCount = product.comments?.[0]?.count || 0;
-                const commentHTML = commentCount > 0 ? `<span class="badge badge-outline" style="font-size:0.75rem;padding:1px 6px"><i data-lucide="message-square" style="width:11px;height:11px;margin-left:3px"></i>${commentCount}</span>` : '';
+            const commentCount = product.comments?.[0]?.count || 0;
+            const commentHTML = commentCount > 0 ? `<span class="badge badge-outline" style="font-size:0.75rem;padding:1px 6px"><i data-lucide="message-square" style="width:11px;height:11px;margin-left:3px"></i>${commentCount}</span>` : '';
 
-                return `
-                <a href="?page=product&slug=${slug}" class="featured-card glass-card">
+            return `
+                <div class="featured-card glass-card" onclick="window.location.href='?page=product&slug=${slug}'" style="cursor:pointer">
                     <div class="card-media">
                         <img src="${imgUrl}" alt="${product.title}" loading="lazy">
                         <div class="card-overlay"></div>
+                        <div class="card-actions" style="position:absolute;top:var(--space-sm);left:var(--space-sm);z-index:5;display:flex;gap:4px">
+                            <button class="item-action-btn like-btn ${isLiked ? 'active' : ''}" onclick="handleLike(event, '${product.id}')" title="אהבתי" style="width:32px;height:32px;background:rgba(0,0,0,0.5);backdrop-filter:blur(5px);border-radius:50%;color:white;display:flex;align-items:center;justify-content:center;border:none;transition:all 0.3s">
+                                <i data-lucide="heart" style="width:14px;height:14px" ${isLiked ? 'fill="currentColor"' : ''}></i>
+                                <span class="like-count" style="font-size:0.7rem;margin-right:2px">${product.like_count || 0}</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="card-title">${product.title}</div>
@@ -185,17 +193,18 @@
                             <div style="display:flex;align-items:center;gap:var(--space-sm)">
                                 <div class="card-category" style="margin-bottom:0">${product.categories?.name || ''}</div>
                                 ${commentHTML}
+                                <span class="badge badge-outline" style="font-size:0.75rem;padding:1px 6px"><i data-lucide="eye" style="width:11px;height:11px;margin-left:3px"></i>${product.view_count || 0}</span>
                             </div>
                             ${priceHTML}
                         </div>
                     </div>
-                </a>
+                </div>
             `;
-            }).join('');
-        } else if (container) {
-            container.innerHTML = '<p style="color:var(--text-muted);padding:var(--space-xl)">העבודות שלנו יופיעו כאן בקרוב</p>';
-        }
+        }).join('');
+    } else if (container) {
+        container.innerHTML = '<p style="color:var(--text-muted);padding:var(--space-xl)">העבודות שלנו יופיעו כאן בקרוב</p>';
+    }
 
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 </script>

@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS products (
     print_time TEXT,
     dimensions TEXT,
     featured BOOLEAN DEFAULT FALSE,
+    view_count INT DEFAULT 0,
+    like_count INT DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -39,6 +41,12 @@ DO $$ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='sale_price') THEN
         ALTER TABLE products ADD COLUMN sale_price DECIMAL(10,2);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='view_count') THEN
+        ALTER TABLE products ADD COLUMN view_count INT DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='like_count') THEN
+        ALTER TABLE products ADD COLUMN like_count INT DEFAULT 0;
     END IF;
 END $$;
 
@@ -94,11 +102,24 @@ CREATE TABLE IF NOT EXISTS site_settings (
     value TEXT
 );
 
--- ── RPC: Increment download count ──
 CREATE OR REPLACE FUNCTION increment_download(file_id UUID)
 RETURNS VOID AS $$
 BEGIN
     UPDATE product_files SET download_count = download_count + 1 WHERE id = file_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION increment_view(product_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE products SET view_count = view_count + 1 WHERE id = product_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION increment_like(product_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE products SET like_count = like_count + 1 WHERE id = product_id;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -13,12 +13,17 @@ define('SITE_TAGLINE', 'יוצרים בתלת מימד');
 
 // Auto-detect SITE_URL for Vercel/Production vs Localhost
 if (getenv('SITE_URL')) {
-    define('SITE_URL', getenv('SITE_URL'));
-} else if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' && $_SERVER['HTTP_HOST'] !== '127.0.0.1') {
-    // On Vercel or other production, use relative path by default or detect host
-    define('SITE_URL', '');
+    define('SITE_URL', rtrim(getenv('SITE_URL'), '/'));
+} else if (isset($_SERVER['HTTP_HOST'])) {
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+    $host = $_SERVER['HTTP_HOST'];
+    // On Vercel, HTTP_HOST is usually the deployment URL
+    if ($host === 'localhost' || $host === '127.0.0.1') {
+        define('SITE_URL', $protocol . $host . '/3D');
+    } else {
+        define('SITE_URL', $protocol . $host);
+    }
 } else {
-    // Local development fallback
     define('SITE_URL', 'http://localhost/3D');
 }
 

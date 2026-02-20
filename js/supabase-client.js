@@ -143,8 +143,21 @@ async function submitComment(productId, name, email, content) {
 async function trackDownload(fileId) {
     const db = getSupabase();
     if (!db) return;
-
     await db.rpc('increment_download', { file_id: fileId });
+}
+
+// Helper: increment product view
+async function incrementProductView(productId) {
+    const db = getSupabase();
+    if (!db) return;
+    await db.rpc('increment_view', { product_id: productId });
+}
+
+// Helper: increment product like
+async function incrementProductLike(productId) {
+    const db = getSupabase();
+    if (!db) return;
+    await db.rpc('increment_like', { product_id: productId });
 }
 
 // Helper: fetch site statistics
