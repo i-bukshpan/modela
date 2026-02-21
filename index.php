@@ -69,9 +69,6 @@ if ($page === 'post' && isset($_GET['slug'])) {
 include __DIR__ . '/includes/header.php';
 
 // Include requested page
-// DEBUG: תסיר את זה אחרי הבדיקה
-echo "DEBUG: page=$page | path=$pageFile | exists=" . (file_exists($pageFile) ? 'YES' : 'NO');
-$pageFile = __DIR__ . '/pages/' . $page . '.php';
 if (file_exists($pageFile)) {
   include $pageFile;
 } else {
