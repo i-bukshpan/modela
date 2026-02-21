@@ -3,10 +3,16 @@
  * This file initializes the Supabase client for use across the application
  */
 
-const SUPABASE_URL = 'https://onfgfiidwvdmlfubwqmv.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_u7SKsP70TVWn0no55C6U5g_mG7RAl-x';
+if (typeof SUPABASE_URL === 'undefined') {
+    var SUPABASE_URL = 'https://onfgfiidwvdmlfubwqmv.supabase.co';
+}
+if (typeof SUPABASE_ANON_KEY === 'undefined') {
+    var SUPABASE_ANON_KEY = 'sb_publishable_u7SKsP70TVWn0no55C6U5g_mG7RAl-x';
+}
 
-let supabaseClient = null;
+if (typeof supabaseClient === 'undefined') {
+    var supabaseClient = null;
+}
 
 function getSupabase() {
     if (!supabaseClient && typeof supabase !== 'undefined') {

@@ -70,6 +70,7 @@ function showSection(name, el) {
         case 'products': loadProductsList(); break;
         case 'categories': loadCategoriesList(); break;
         case 'comments': loadCommentsList(); break;
+        case 'blogs': loadBlogsList(); break;
         case 'messages': loadMessagesList(); break;
     }
 }
@@ -79,10 +80,11 @@ async function loadDashboard() {
     const db = getSupabase();
     if (!db) return;
 
-    const [products, comments, messages] = await Promise.all([
+    const [products, comments, messages, blogs] = await Promise.all([
         db.from('products').select('id', { count: 'exact', head: true }),
         db.from('comments').select('id', { count: 'exact', head: true }),
-        db.from('contact_messages').select('id', { count: 'exact', head: true })
+        db.from('contact_messages').select('id', { count: 'exact', head: true }),
+        db.from('blog_posts').select('id', { count: 'exact', head: true })
     ]);
 
     document.getElementById('dashboardStats').innerHTML = `
@@ -93,6 +95,10 @@ async function loadDashboard() {
         <div class="admin-stat-card glass-card">
             <div class="stat-icon" style="background:var(--gradient-accent)"><i data-lucide="message-square"></i></div>
             <div><div class="stat-number">${comments.count || 0}</div><div class="stat-label">תגובות</div></div>
+        </div>
+        <div class="admin-stat-card glass-card">
+            <div class="stat-icon" style="background:var(--gradient-primary)"><i data-lucide="book-open"></i></div>
+            <div><div class="stat-number">${blogs.count || 0}</div><div class="stat-label">מאמרים</div></div>
         </div>
         <div class="admin-stat-card glass-card">
             <div class="stat-icon" style="background:linear-gradient(135deg,#5cb85c,#3d9970)"><i data-lucide="mail"></i></div>
@@ -821,6 +827,154 @@ async function deleteMessage(id) {
     await db.from('contact_messages').delete().eq('id', id);
     showToast('ההודעה נמחקה');
     loadMessagesList();
+}
+
+// ── Blogs ──
+async function loadBlogsList() {
+    const db = getSupabase();
+    if (!db) return;
+
+    const { data, error } = await db.from('blog_posts').select('*').order('created_at', { ascending: false });
+    const tbody = document.getElementById('blogsBody');
+
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">אין מאמרים עדיין</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = data.map(p => {
+        const thumb = p.cover_image ? `<img src="${p.cover_image}" class="thumb" alt="">` : '<div class="thumb" style="background:var(--bg-glass)"></div>';
+        const statusBadge = p.status === 'published' ? '<span class="badge" style="background:rgba(92,184,92,0.15);color:#5cb85c">פורסם</span>' : '<span class="badge badge-accent">טיוטה</span>';
+
+        return `<tr>
+            <td>${thumb}</td>
+            <td><strong>${p.title}</strong></td>
+            <td>${statusBadge}</td>
+            <td><i data-lucide="eye" style="width:12px;height:12px;margin-left:4px"></i>${p.view_count || 0}</td>
+            <td style="font-size:0.8rem;color:var(--text-muted)">${new Date(p.created_at).toLocaleDateString('he-IL')}</td>
+            <td>
+                <button class="btn btn-sm btn-secondary" onclick="editBlog('${p.id}')"><i data-lucide="edit-2"></i></button>
+                <button class="btn btn-sm btn-secondary" onclick="deleteBlog('${p.id}')" style="color:var(--color-accent)"><i data-lucide="trash-2"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function showBlogForm(post = null) {
+    const container = document.getElementById('blogFormContainer');
+    container.style.display = 'block';
+
+    container.innerHTML = `
+        <div class="glass-card" style="padding:var(--space-xl);margin-bottom:var(--space-xl)">
+            <h3 style="margin-bottom:var(--space-lg)">${post ? 'עריכת מאמר' : 'מאמר חדש'}</h3>
+            <form class="admin-form" onsubmit="saveBlog(event,'${post?.id || ''}')">
+                <div class="form-group">
+                    <label>כותרת *</label>
+                    <input type="text" id="bTitle" required value="${post?.title || ''}" placeholder="כותרת המאמר">
+                </div>
+                <div class="form-group">
+                    <label>Slug (URL) *</label>
+                    <input type="text" id="bSlug" required value="${post?.slug || ''}" placeholder="post-title">
+                </div>
+                <div class="form-group">
+                    <label>תקציר</label>
+                    <textarea id="bExcerpt" rows="2" placeholder="תקציר קצר שיופיע בכרטיס המאמר...">${post?.excerpt || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>תוכן (HTML)</label>
+                    <textarea id="bContent" rows="10" placeholder="תוכן המאמר ב-HTML...">${post?.content || ''}</textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+                    <div class="form-group">
+                        <label>תמונת כיסוי (URL)</label>
+                        <input type="text" id="bCoverImage" value="${post?.cover_image || ''}" placeholder="URL של התמונה">
+                    </div>
+                    <div class="form-group">
+                        <label>סטטוס</label>
+                        <select id="bStatus">
+                            <option value="published" ${post?.status === 'published' ? 'selected' : ''}>פורסם</option>
+                            <option value="draft" ${post?.status === 'draft' ? 'selected' : ''}>טיוטה</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>תגיות (מופרדות בפסיק)</label>
+                    <input type="text" id="bTags" value="${(post?.tags || []).join(', ')}" placeholder="תלת מימד, טיפים, מדריכים">
+                </div>
+                <div style="display:flex;gap:var(--space-md);margin-top:var(--space-lg)">
+                    <button type="submit" class="btn btn-primary" id="saveBlogBtn"><i data-lucide="save"></i> שמור</button>
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('blogFormContainer').style.display='none'">ביטול</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    // Auto-generate slug
+    document.getElementById('bTitle').addEventListener('input', (e) => {
+        const slugField = document.getElementById('bSlug');
+        if (!post) {
+            slugField.value = e.target.value.replace(/\s+/g, '-').replace(/[^\u0590-\u05FFa-zA-Z0-9-]/g, '').toLowerCase();
+        }
+    });
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function saveBlog(e, id) {
+    e.preventDefault();
+    const db = getSupabase();
+    if (!db) return;
+
+    const saveBtn = document.getElementById('saveBlogBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i data-lucide="loader" style="animation:spin 1s linear infinite"></i> שומר...';
+
+    const blogData = {
+        title: document.getElementById('bTitle').value,
+        slug: document.getElementById('bSlug').value,
+        excerpt: document.getElementById('bExcerpt').value,
+        content: document.getElementById('bContent').value,
+        cover_image: document.getElementById('bCoverImage').value,
+        status: document.getElementById('bStatus').value,
+        tags: document.getElementById('bTags').value.split(',').map(s => s.trim()).filter(s => s !== ''),
+        updated_at: new Date().toISOString()
+    };
+
+    let error;
+    if (id) {
+        ({ error } = await db.from('blog_posts').update(blogData).eq('id', id));
+    } else {
+        ({ error } = await db.from('blog_posts').insert(blogData));
+    }
+
+    if (error) {
+        alert('שגיאה בשמירת המאמר: ' + error.message);
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i data-lucide="save"></i> שמור';
+        return;
+    }
+
+    showToast(id ? 'המאמר עודכן בהצלחה' : 'המאמר נוצר בהצלחה');
+    document.getElementById('blogFormContainer').style.display = 'none';
+    loadBlogsList();
+}
+
+async function editBlog(id) {
+    const db = getSupabase();
+    if (!db) return;
+    const { data } = await db.from('blog_posts').select('*').eq('id', id).single();
+    if (data) showBlogForm(data);
+}
+
+async function deleteBlog(id) {
+    if (!confirm('בטוחים שרוצים למחוק את המאמר?')) return;
+    const db = getSupabase();
+    if (!db) return;
+    await db.from('blog_posts').delete().eq('id', id);
+    showToast('המאמר נמחק');
+    loadBlogsList();
 }
 
 // ── CSS for spin animation ──

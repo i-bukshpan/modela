@@ -1,50 +1,47 @@
-<!-- Homepage: Hero + Categories + Featured Products -->
+<!-- Homepage -->
 
 <!-- Hero Section -->
 <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-grid-pattern"></div>
     <div class="hero-content">
-        <div class="hero-badge">
+        <div class="hero-badge animate-on-scroll">
             <i data-lucide="sparkles"></i>
             סטודיו יצירתי להדפסת תלת מימד
         </div>
-        <h1>
+        <h1 class="animate-on-scroll">
             מדמיון<br>
             <span class="highlight">למציאות תלת־ממדית</span>
         </h1>
-        <p class="hero-subtitle">
+        <p class="hero-subtitle animate-on-scroll">
             מודלה הופכת כל רעיון למוצר מוחשי — בהתאמה אישית, בדיוק מרבי,
-            ובתהליך מלא משלבי הדמיון ועד ההדפסה
+            ובתהליך מלא משלבי הדמיון ועד ההדפסה.
         </p>
-        <div class="hero-buttons">
+        <div class="hero-buttons animate-on-scroll">
             <a href="?page=gallery" class="btn btn-primary">
                 <i data-lucide="grid-3x3"></i>
-                ראה דוגמאות מהשטח
+                ראה פרויקטים
             </a>
             <a href="?page=contact" class="btn btn-secondary">
                 <i data-lucide="send"></i>
-                שלח רעיון, ניצור יחד
+                בשיחת ייעוץ חינם
             </a>
         </div>
+
         <div class="hero-stats">
             <div class="hero-stat animate-on-scroll">
                 <div class="stat-number" data-count="500">0</div>
-                <div class="stat-label">מוצרים הודפסו</div>
+                <div class="stat-label">הדפסות מוצלחות</div>
             </div>
             <div class="hero-stat animate-on-scroll">
                 <div class="stat-number" data-count="200">0</div>
                 <div class="stat-label">לקוחות מרוצים</div>
             </div>
             <div class="hero-stat animate-on-scroll">
-                <div class="stat-number" data-count="50">0</div>
-                <div class="stat-label">קבצים להורדה</div>
+                <div class="stat-number" data-count="99">0</div>
+                <div class="stat-label">% שביעות רצון</div>
             </div>
         </div>
-    </div>
-    <div class="hero-scroll-indicator">
-        <span>גלול למטה</span>
-        <i data-lucide="chevrons-down"></i>
     </div>
 </section>
 
@@ -52,80 +49,140 @@
 <section class="section">
     <div class="container">
         <div class="section-header animate-on-scroll">
-            <h2>פתרונות תלת מימד</h2>
-            <p>יצירתיות שימושית — מגוון רחב של פתרונות לכל צורך</p>
+            <h2>מה אנחנו יוצרים?</h2>
+            <p>הדפסת תלת-מימד היא עולם שלם של אפשרויות. הנה הקטגוריות העיקריות שלנו:</p>
         </div>
         <div class="categories-grid" id="categoriesGrid">
-            <!-- Loaded dynamically, fallback static content -->
             <a href="?page=gallery&cat=custom" class="category-card glass-card animate-on-scroll">
                 <div class="cat-icon"><i data-lucide="palette"></i></div>
                 <h3>התאמה אישית</h3>
-                <p>מה שלא מצאת — ניצור במיוחד בשבילך</p>
+                <p>עיצוב ויצור מוצרים לפי דרישה ספציפית</p>
             </a>
             <a href="?page=gallery&cat=medical" class="category-card glass-card animate-on-scroll">
                 <div class="cat-icon"><i data-lucide="heart-pulse"></i></div>
                 <h3>פתרונות רפואיים</h3>
-                <p>מודלים ועזרים רפואיים מדויקים</p>
-            </a>
-            <a href="?page=gallery&cat=home" class="category-card glass-card animate-on-scroll">
-                <div class="cat-icon"><i data-lucide="home"></i></div>
-                <h3>פתרונות לבית</h3>
-                <p>אביזרים ופתרונות חכמים לבית</p>
+                <p>מודלים ועזרים לתחום הרפואה והשיקום</p>
             </a>
             <a href="?page=gallery&cat=gifts" class="category-card glass-card animate-on-scroll">
                 <div class="cat-icon"><i data-lucide="gift"></i></div>
-                <h3>מתנות בהתאמה אישית</h3>
-                <p>מתנות ייחודיות ובלתי נשכחות</p>
+                <h3>מתנות ייחודיות</h3>
+                <p>מתנות עם משמעות שאי אפשר למצוא בחנות</p>
             </a>
             <a href="?page=gallery&cat=prototype" class="category-card glass-card animate-on-scroll">
                 <div class="cat-icon"><i data-lucide="cpu"></i></div>
                 <h3>אב טיפוס</h3>
-                <p>רעיון שהופך למוצר מוחשי</p>
+                <p>פיתוח וניסוי מוצרים לפני מעבר למסה</p>
             </a>
-            <a href="?page=gallery&cat=internet" class="category-card glass-card animate-on-scroll">
-                <div class="cat-icon"><i data-lucide="globe"></i></div>
-                <h3>מוצרים מהאינטרנט</h3>
-                <p>הדפסת מודלים פופולריים מהרשת</p>
-            </a>
+        </div>
+    </div>
+</section>
+
+<!-- The Process -->
+<section class="section" style="background: var(--bg-surface);">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <h2>איך זה עובד?</h2>
+            <p>הדרך מהרעיון שלך ועד למוצר המודפס פשוטה ומהירה</p>
+        </div>
+        <div class="process-steps">
+            <div class="process-step animate-on-scroll">
+                <div class="step-number">1</div>
+                <h3>הרעיון</h3>
+                <p>שולחים לנו סקיצה, קובץ או פשוט מסבירים את הרעיון</p>
+            </div>
+            <div class="process-step animate-on-scroll">
+                <div class="step-number">2</div>
+                <h3>התכנון</h3>
+                <p>אנחנו מעצבים מודל דיגיטלי ושולחים לאישורך</p>
+            </div>
+            <div class="process-step animate-on-scroll">
+                <div class="step-number">3</div>
+                <h3>ההדפסה</h3>
+                <p>המדפסות שלנו נכנסות לעבודה בדיוק מקסימלי</p>
+            </div>
+            <div class="process-step animate-on-scroll">
+                <div class="step-number">4</div>
+                <h3>המשלוח</h3>
+                <p>המוצר המוכן מגיע אליך ארוז ומוכן לשימוש</p>
+            </div>
         </div>
     </div>
 </section>
 
 <!-- Featured Products -->
-<section class="section" style="background: var(--bg-secondary);">
+<section class="section">
     <div class="container">
         <div class="section-header animate-on-scroll">
-            <h2>העבודות שלנו</h2>
-            <p>כל פרויקט מתחיל בחלום קטן — הנה חלק מהם</p>
+            <h2>פרויקטים נבחרים</h2>
+            <p>הצצה אל חלק מהעבודות שביצענו לאחרונה</p>
         </div>
         <div class="featured-scroll" id="featuredScroll">
-            <!-- Loaded dynamically via JS -->
+            <!-- Loading skeleton placeholder -->
+            <div class="skeleton" style="height:300px; width:320px; border-radius:var(--radius-lg)"></div>
+            <div class="skeleton" style="height:300px; width:320px; border-radius:var(--radius-lg)"></div>
+            <div class="skeleton" style="height:300px; width:320px; border-radius:var(--radius-lg)"></div>
         </div>
-        <div style="text-align:center;margin-top:var(--space-lg)">
-            <a href="?page=gallery" class="btn btn-secondary">
-                <i data-lucide="arrow-left"></i>
-                לכל העבודות
-            </a>
+        <div style="text-align:center;margin-top:var(--space-2xl)">
+            <a href="?page=gallery" class="btn btn-secondary">לגלריה המלאה</a>
         </div>
     </div>
 </section>
 
-<!-- CTA Section -->
+<!-- Latest from Blog -->
+<section class="section" style="background: var(--bg-surface);">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <h2>מהחדש בבלוג</h2>
+            <p>עדכונים, טיפים וסיפורים מעניינים מעולם התלת-מימד</p>
+        </div>
+        <div class="blog-grid" id="homeBlogGrid">
+            <!-- Loaded via JS -->
+        </div>
+        <div style="text-align:center;margin-top:var(--space-2xl)">
+            <a href="?page=blog" class="btn btn-secondary">לכל הכתבות</a>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
 <section class="section">
     <div class="container">
-        <div class="glass-card animate-on-scroll"
-            style="text-align:center;padding:var(--space-3xl);position:relative;overflow:hidden">
-            <div style="position:absolute;inset:0;background:var(--gradient-subtle)"></div>
-            <div style="position:relative;z-index:1">
-                <h2 style="font-size:clamp(1.5rem,4vw,2.2rem);font-weight:800;margin-bottom:var(--space-md)">
-                    רעיון. עיצוב. הדפסה.</h2>
-                <p style="color:var(--text-secondary);max-width:500px;margin:0 auto var(--space-xl);font-size:1.05rem">
-                    אנו מלווים אותך מהשלב הרעיוני — עד שהמוצר בידיים שלך
-                </p>
-                <a href="?page=contact" class="btn btn-primary">
-                    <i data-lucide="send"></i>
-                    שלח רעיון, ניצור יחד
-                </a>
+        <div class="section-header animate-on-scroll">
+            <h2>מה אומרים עלינו?</h2>
+            <p>הלקוחות שלנו הם השגרירים הכי טובים שלנו</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card glass-card animate-on-scroll">
+                <p class="testimonial-text">הזמנתי דגם מורכב והתוצאה הייתה מעל ומעבר לציפיות. הדיוק מדהים והשירות היה
+                    אישי ומקצועי.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">א</div>
+                    <div>
+                        <strong>אלכס ק.</strong>
+                        <div style="font-size:0.85rem; color:var(--text-muted)">מעצב מוצר</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card glass-card animate-on-scroll">
+                <p class="testimonial-text">פתרון רפואי יצירתי שעזר לנו מאוד. מודלה הבינו בדיוק את הצורך וסיפקו פתרון
+                    מהיר.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">ד</div>
+                    <div>
+                        <strong>ד"ר לוי</strong>
+                        <div style="font-size:0.85rem; color:var(--text-muted)">מכון שיקום</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card glass-card animate-on-scroll">
+                <p class="testimonial-text">הדפסת מתנה אישית ליום הולדת - יצא יפהפה ומרגש. מומלץ בחום!</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">ש</div>
+                    <div>
+                        <strong>שירה מ.</strong>
+                        <div style="font-size:0.85rem; color:var(--text-muted)">לקוחה פרטית</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -135,76 +192,45 @@
     document.addEventListener('DOMContentLoaded', async () => {
         initCounters();
 
-        // Load real stats
-        const stats = await fetchStats();
-        const statProducts = document.querySelector('.hero-stat:nth-child(1) .stat-number');
-        const statCustomers = document.querySelector('.hero-stat:nth-child(2) .stat-number');
-        const statFiles = document.querySelector('.hero-stat:nth-child(3) .stat-number');
+        // Load Featured Products
+        const featured = await fetchProducts({ featured: true, limit: 6 });
+        const featuredContainer = document.getElementById('featuredScroll');
+        if (featured.length > 0) {
+            featuredContainer.innerHTML = featured.map(p => createProductCard(p)).join('');
+        } else {
+            featuredContainer.innerHTML = '<p class="text-center">אין פרויקטים נבחרים כרגע</p>';
+        }
 
-        if (statProducts) statProducts.setAttribute('data-count', stats.products || 0);
-        if (statCustomers) statCustomers.setAttribute('data-count', stats.customers || 0);
-        if (statFiles) statFiles.setAttribute('data-count', stats.files || 0);
+        // Load Latest Blog Posts
+        const blogContainer = document.getElementById('homeBlogGrid');
+        try {
+            const { data: posts } = await getSupabase()
+                .from('blog_posts')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(3);
 
-        // Re-trigger counters
-        initCounters();
-
-        // Load featured products
-        const featured = await fetchProducts({ featured: true, limit: 8 });
-        const container = document.getElementById('featuredScroll');
-        container.innerHTML = featured.map(product => {
-            const cover = product.product_media?.find(m => m.is_cover) || product.product_media?.[0];
-            const imgUrl = cover?.url || '';
-            const slug = product.slug || product.id;
-            const likedProducts = JSON.parse(localStorage.getItem('liked_products') || '[]');
-            const isLiked = likedProducts.includes(product.id);
-
-            let priceHTML = '';
-            if (product.price) {
-                if (product.sale_price) {
-                    priceHTML = `
-                            <div class="card-price sale">
-                                <span class="old-price">₪${product.price}</span>
-                                <span class="current-price">₪${product.sale_price}</span>
-                            </div>
-                        `;
-                } else {
-                    priceHTML = `<div class="card-price"><span class="current-price">₪${product.price}</span></div>`;
-                }
+            if (posts && posts.length > 0) {
+                blogContainer.innerHTML = posts.map(post => `
+                <article class="blog-card glass-card animate-on-scroll" onclick="window.location.href='?page=post&slug=${post.slug}'">
+                    <div class="blog-card-image">
+                        <img src="${post.cover_image || 'css/img/blog-fallback.jpg'}" alt="${post.title}">
+                    </div>
+                    <div class="blog-card-content">
+                        <div class="blog-card-date">${formatDateHe(post.created_at)}</div>
+                        <h3 class="blog-card-title">${post.title}</h3>
+                        <p class="blog-card-excerpt">${post.excerpt || ''}</p>
+                    </div>
+                </article>
+            `).join('');
+            } else {
+                blogContainer.innerHTML = '<p class="text-center" style="grid-column: 1/-1;">המאמרים שלנו יופיעו כאן בקרוב</p>';
             }
+        } catch (e) {
+            console.error(e);
+        }
 
-            const commentCount = product.comments?.[0]?.count || 0;
-            const commentHTML = commentCount > 0 ? `<span class="badge badge-outline" style="font-size:0.75rem;padding:1px 6px"><i data-lucide="message-square" style="width:11px;height:11px;margin-left:3px"></i>${commentCount}</span>` : '';
-
-            return `
-                <div class="featured-card glass-card" onclick="window.location.href='?page=product&slug=${slug}'" style="cursor:pointer">
-                    <div class="card-media">
-                        <img src="${imgUrl}" alt="${product.title}" loading="lazy">
-                        <div class="card-overlay"></div>
-                        <div class="card-actions" style="position:absolute;top:var(--space-sm);left:var(--space-sm);z-index:5;display:flex;gap:4px">
-                            <button class="item-action-btn like-btn ${isLiked ? 'active' : ''}" onclick="handleLike(event, '${product.id}')" title="אהבתי" style="width:32px;height:32px;background:rgba(0,0,0,0.5);backdrop-filter:blur(5px);border-radius:50%;color:white;display:flex;align-items:center;justify-content:center;border:none;transition:all 0.3s">
-                                <i data-lucide="heart" style="width:14px;height:14px" ${isLiked ? 'fill="currentColor"' : ''}></i>
-                                <span class="like-count" style="font-size:0.7rem;margin-right:2px">${product.like_count || 0}</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="card-title">${product.title}</div>
-                        <div style="display:flex;justify-content:space-between;align-items:center">
-                            <div style="display:flex;align-items:center;gap:var(--space-sm)">
-                                <div class="card-category" style="margin-bottom:0">${product.categories?.name || ''}</div>
-                                ${commentHTML}
-                                <span class="badge badge-outline" style="font-size:0.75rem;padding:1px 6px"><i data-lucide="eye" style="width:11px;height:11px;margin-left:3px"></i>${product.view_count || 0}</span>
-                            </div>
-                            ${priceHTML}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    } else if (container) {
-        container.innerHTML = '<p style="color:var(--text-muted);padding:var(--space-xl)">העבודות שלנו יופיעו כאן בקרוב</p>';
-    }
-
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        initScrollAnimations();
     });
 </script>

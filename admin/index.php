@@ -88,6 +88,9 @@
                 <a href="#comments" class="sidebar-link" data-section="comments" onclick="showSection('comments',this)">
                     <i data-lucide="message-square"></i> תגובות
                 </a>
+                <a href="#blogs" class="sidebar-link" data-section="blogs" onclick="showSection('blogs',this)">
+                    <i data-lucide="book-open"></i> בלוג
+                </a>
                 <a href="#messages" class="sidebar-link" data-section="messages" onclick="showSection('messages',this)">
                     <i data-lucide="mail"></i> הודעות
                 </a>
@@ -175,6 +178,36 @@
                                 </tr>
                             </thead>
                             <tbody id="commentsBody">
+                                <tr>
+                                    <td colspan="6" style="text-align:center;color:var(--text-muted)">טוען...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Blogs -->
+                <div class="admin-section" id="section-blogs" style="display:none">
+                    <div class="admin-header">
+                        <h1>בלוג</h1>
+                        <button class="btn btn-primary" onclick="showBlogForm()">
+                            <i data-lucide="plus"></i> מאמר חדש
+                        </button>
+                    </div>
+                    <div id="blogFormContainer" style="display:none"></div>
+                    <div class="glass-card" style="padding:var(--space-lg);overflow-x:auto">
+                        <table class="admin-table" id="blogsTable">
+                            <thead>
+                                <tr>
+                                    <th>תמונה</th>
+                                    <th>כותרת</th>
+                                    <th>סטטוס</th>
+                                    <th>צפיות</th>
+                                    <th>תאריך</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blogsBody">
                                 <tr>
                                     <td colspan="6" style="text-align:center;color:var(--text-muted)">טוען...</td>
                                 </tr>

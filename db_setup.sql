@@ -234,6 +234,40 @@ CREATE POLICY "Auth delete product-images" ON storage.objects FOR DELETE USING (
 CREATE POLICY "Auth delete product-videos" ON storage.objects FOR DELETE USING (bucket_id = 'product-videos' AND auth.role() = 'authenticated');
 CREATE POLICY "Auth delete product-files" ON storage.objects FOR DELETE USING (bucket_id = 'product-files' AND auth.role() = 'authenticated');
 
+-- ── Blog Posts ──
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    title TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    content TEXT NOT NULL,
+    excerpt TEXT,
+    cover_image TEXT,
+    author_id UUID REFERENCES auth.users(id),
+    status TEXT DEFAULT 'published' CHECK (status IN ('draft', 'published')),
+    tags TEXT[],
+    view_count INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Blog Policies
+ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read blog_posts" ON blog_posts;
+DROP POLICY IF EXISTS "Admin full blog_posts" ON blog_posts;
+CREATE POLICY "Public read blog_posts" ON blog_posts FOR SELECT USING (true);
+CREATE POLICY "Admin full blog_posts" ON blog_posts FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- Blog Index
+CREATE INDEX IF NOT EXISTS idx_blog_slug ON blog_posts(slug);
+CREATE INDEX IF NOT EXISTS idx_blog_status ON blog_posts(status);
+
+CREATE OR REPLACE FUNCTION increment_blog_view(post_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE blog_posts SET view_count = view_count + 1 WHERE id = post_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- ── Seed: Default Categories ──
 -- No default categories — create your own via the admin panel at /admin/
 -- Categories can have parent-child relationships for subcategories

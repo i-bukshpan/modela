@@ -135,8 +135,35 @@ input,
 textarea,
 select {
     font-family: inherit;
-    font-size: inherit;
-    color: inherit
+    font-size: 1rem;
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    width: 100%;
+    transition: all var(--transition-base);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-dim);
+    background: var(--bg-surface-hover);
+}
+
+label {
+    display: block;
+    margin-bottom: var(--space-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.form-group {
+    margin-bottom: var(--space-lg);
 }
 
 ul,
@@ -322,6 +349,87 @@ ol {
 .animate-on-scroll.visible {
     opacity: 1;
     transform: translateY(0)
+}
+
+/* ── Skeleton Loader ── */
+.skeleton {
+    background: linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-surface-hover) 50%, var(--bg-surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-md);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-primary-dim);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: rotate 1s linear infinite;
+    margin: 0 auto var(--space-md);
+}
+
+@keyframes rotate {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ── Floating WhatsApp ── */
+.whatsapp-float {
+    position: fixed;
+    bottom: var(--space-xl);
+    right: var(--space-xl);
+    width: 60px;
+    height: 60px;
+    background: #25d366;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.whatsapp-float:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.whatsapp-float i {
+    width: 32px;
+    height: 32px;
+}
+
+/* ── Mobile & UX Utilities ── */
+@media (max-width: 768px) {
+    :root {
+        --nav-height: 64px;
+        --space-4xl: 64px;
+        --space-3xl: 48px;
+    }
+
+    .container {
+        padding: 0 var(--space-md);
+    }
+
+    .section {
+        padding: var(--space-3xl) 0;
+    }
+
+    .whatsapp-float {
+        bottom: var(--space-lg);
+        right: var(--space-lg);
+        width: 50px;
+        height: 50px;
+    }
+
+    .whatsapp-float i {
+        width: 26px;
+        height: 26px;
+    }
 }
 
 /* ── Brand Logo Text ── */

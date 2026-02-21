@@ -31,6 +31,17 @@
             }
         }
     }
+
+    // If on blog post page
+    if (isset($metaPost)) {
+        $metaTitle = $metaPost['title'] . ' — ' . SITE_NAME;
+        if (!empty($metaPost['excerpt'])) {
+            $metaDesc = mb_strimwidth(strip_tags($metaPost['excerpt']), 0, 160, "...");
+        }
+        if (!empty($metaPost['cover_image'])) {
+            $metaImage = $metaPost['cover_image'];
+        }
+    }
     ?>
     <title><?php echo $metaTitle; ?></title>
     <meta name="description" content="<?php echo $metaDesc; ?>">
@@ -56,11 +67,13 @@
 
     <!-- Supabase JS SDK -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="<?php echo SITE_URL; ?>/js/supabase-client.js"></script>
 
     <!-- Styles -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/style.css">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/components.css">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/pages.css">
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/footer.css">
 </head>
 
 <body>
@@ -88,6 +101,11 @@
                     class="nav-link <?php echo $page === 'about' ? 'active' : ''; ?>">
                     <i data-lucide="info"></i>
                     <span>אודות</span>
+                </a>
+                <a href="<?php echo SITE_URL; ?>/?page=blog"
+                    class="nav-link <?php echo $page === 'blog' ? 'active' : ''; ?>">
+                    <i data-lucide="book-open"></i>
+                    <span>בלוג</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/?page=contact"
                     class="nav-link <?php echo $page === 'contact' ? 'active' : ''; ?>">

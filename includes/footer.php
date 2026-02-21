@@ -50,13 +50,12 @@
     </div>
 </footer>
 
-<!-- Back to Top -->
-<button class="back-to-top" id="backToTop" aria-label="חזרה למעלה">
-    <i data-lucide="chevron-up"></i>
-</button>
+<!-- Floating WhatsApp -->
+<a href="https://wa.me/972504283555" class="whatsapp-float" target="_blank" aria-label="צור קשר בוואטסאפ">
+    <i data-lucide="message-circle"></i>
+</a>
 
 <!-- Scripts -->
-<script src="<?php echo SITE_URL; ?>/js/supabase-client.js"></script>
 <script src="<?php echo SITE_URL; ?>/js/app.js"></script>
 <?php if ($page === 'gallery' || $page === 'home' || $page === 'category'): ?>
     <script src="<?php echo SITE_URL; ?>/js/gallery.js"></script>
