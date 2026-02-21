@@ -69,7 +69,6 @@ if ($page === 'post' && isset($_GET['slug'])) {
 include __DIR__ . '/includes/header.php';
 
 // Include requested page
-$pageFile = __DIR__ . '/pages/' . $page . '.php';
 if (file_exists($pageFile)) {
   include $pageFile;
 } else {
