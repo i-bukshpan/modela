@@ -11,16 +11,63 @@ require_once $rootDir . '/config/supabase.php';
 
 // Simple routing logic (same as root index.php but with adjusted paths)
 $page = isset($_GET['page']) ? $_GET['page'] : 'home';
-$validPages = ['home', 'gallery', 'product', 'category', 'about', 'contact'];
+$validPages = ['home', 'gallery', 'product', 'category', 'about', 'contact', 'blog', 'post'];
 
 if (!in_array($page, $validPages)) {
     $page = 'home';
 }
 
-// Set up globals or constants if needed
-// The config/supabase.php already uses getenv() for Vercel support
+// ── SEO & Sharing Metadata ──
+$metaProduct = null;
+if ($page === 'product' && isset($_GET['slug'])) {
+    $slug = $_GET['slug'];
+    $apiUrl = SUPABASE_URL . '/rest/v1/products?slug=eq.' . $slug . '&select=*,product_media(url,is_cover)';
 
-// Include shared header
+    $opts = [
+        "http" => [
+            "method" => "GET",
+            "header" => "apikey: " . SUPABASE_ANON_KEY . "\n" .
+                "Authorization: Bearer " . SUPABASE_ANON_KEY . "\n"
+        ]
+    ];
+
+    $context = stream_context_create($opts);
+    $response = @file_get_contents($apiUrl, false, $context);
+
+    if ($response) {
+        $data = json_decode($response, true);
+        if (!empty($data)) {
+            $metaProduct = $data[0];
+        }
+    }
+}
+
+// Blog Post Metadata
+$metaPost = null;
+if ($page === 'post' && isset($_GET['slug'])) {
+    $slug = $_GET['slug'];
+    $apiUrl = SUPABASE_URL . '/rest/v1/blog_posts?slug=eq.' . $slug . '&select=*';
+
+    $opts = [
+        "http" => [
+            "method" => "GET",
+            "header" => "apikey: " . SUPABASE_ANON_KEY . "\n" .
+                "Authorization: Bearer " . SUPABASE_ANON_KEY . "\n"
+        ]
+    ];
+
+    $context = stream_context_create($opts);
+    $response = @file_get_contents($apiUrl, false, $context);
+
+    if ($response) {
+        $data = json_decode($response, true);
+        if (!empty($data)) {
+            $metaPost = $data[0];
+        }
+    }
+}
+
+// Include shared header (it will use $metaProduct or $metaPost if set)
 include $rootDir . '/includes/header.php';
 
 // Include requested page
