@@ -72,7 +72,7 @@ export default function JobsPage() {
     }
 
     fetchData()
-    if (selected?.id === job.id) setSelected({ ...selected, status: targetStatus })
+    if (selected?.id === job.id) setSelected({ ...selected, status: targetStatus as any })
   }
 
   const handleDragStart = (e: React.DragEvent, jobId: string) => {

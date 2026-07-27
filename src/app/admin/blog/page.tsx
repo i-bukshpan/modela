@@ -87,7 +87,7 @@ export default function BlogAdminPage() {
                     {p.status === 'published' ? (
                       <Badge variant="success" label="מפורסם" />
                     ) : (
-                      <Badge variant="neutral" label="טיוטה" />
+                      <Badge variant="muted" label="טיוטה" />
                     )}
                   </td>
                   <td className="p-4 text-beige-muted font-num flex items-center gap-1">
