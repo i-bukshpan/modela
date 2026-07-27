@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
@@ -18,7 +18,7 @@ const VIEW_MODES = [
   { key: 'masonry', icon: LayoutGrid },
 ] as const
 
-export default function GalleryPage() {
+function GalleryContent() {
   const searchParams = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -284,5 +284,13 @@ export default function GalleryPage() {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+export default function GalleryPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen pt-32 text-center text-beige-muted">טוען גלריה...</div>}>
+      <GalleryContent />
+    </Suspense>
   )
 }
