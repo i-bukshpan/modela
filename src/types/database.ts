@@ -153,6 +153,7 @@ export interface PrintJob {
   infill_percent: number
   layer_height_mm: number
   assigned_printer: string | null
+  printer_id?: string | null
   filament_id: string | null
   estimated_print_time_min: number | null
   started_at: string | null

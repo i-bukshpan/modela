@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react'
 import type { Product, Testimonial, BlogPost, Category } from '@/types/database'
 import { getProductCover, formatDateHe } from '@/lib/utils'
 
-const ICON_MAP: Record<string, React.ElementType> = {
+const ICON_MAP: Record<string, any> = {
   box: Box, palette: Palette, dna: Dna, gift: Gift, cpu: Cpu, grid: Grid3X3,
 }
 
