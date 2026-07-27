@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* ── RTL & Global Base ── */
+html {
+  direction: rtl;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Heebo', sans-serif;
+  background-color: #0D0C0B;
+  color: #E5DDD3;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #141312; }
+::-webkit-scrollbar-thumb { background: rgba(201,126,42,0.4); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,126,42,0.7); }
+
+/* ── Focus Ring ── */
+:focus-visible {
+  outline: 2px solid rgba(201,126,42,0.7);
+  outline-offset: 2px;
+}
+
+/* ── Glass Utilities ── */
+.glass {
+  background: rgba(229, 221, 211, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 221, 211, 0.09);
+}
+
+.glass-heavy {
+  background: rgba(229, 221, 211, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(229, 221, 211, 0.12);
+}
+
+.glass-gold {
+  background: rgba(201, 126, 42, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(201, 126, 42, 0.2);
+}
+
+/* ── Gold Gradient Text ── */
+.gradient-text {
+  background: linear-gradient(135deg, #C97E2A 0%, #E8B366 50%, #C97E2A 100%);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientX 6s ease infinite;
+}
+
+.gradient-text-static {
+  background: linear-gradient(135deg, #C97E2A 0%, #E8B366 50%, #FFAA45 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Skeleton Loading ── */
+.skeleton {
+  background: linear-gradient(90deg, #1C1B1A 25%, #242322 50%, #1C1B1A 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+  border-radius: 8px;
+}
+
+/* ── Grid Pattern Background ── */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(201, 126, 42, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201, 126, 42, 0.03) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+}
+
+/* ── Selection Color ── */
+::selection {
+  background: rgba(201,126,42,0.3);
+  color: #ffffff;
+}
+
+/* ── Transition Utilities ── */
+.transition-glass {
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* ── Kanban Column Drag States ── */
+.kanban-drag-over {
+  border-color: rgba(201,126,42,0.5) !important;
+  background: rgba(201,126,42,0.06) !important;
+}
+
+/* ── Three.js canvas container ── */
+.three-canvas-wrapper canvas {
+  border-radius: inherit;
+  outline: none;
+}
+
+/* ── Rich text content (blog) ── */
+.prose-modela h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #E5DDD3;
+  margin: 2rem 0 1rem;
+}
+.prose-modela h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #C97E2A;
+  margin: 1.5rem 0 0.75rem;
+}
+.prose-modela p {
+  color: #A39B91;
+  line-height: 1.85;
+  margin-bottom: 1rem;
+}
+.prose-modela a {
+  color: #C97E2A;
+  text-decoration: underline;
+}
+.prose-modela code {
+  background: rgba(201,126,42,0.1);
+  border: 1px solid rgba(201,126,42,0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.875em;
+}
+.prose-modela blockquote {
+  border-right: 3px solid #C97E2A;
+  padding-right: 1rem;
+  color: #E8B366;
+  font-style: italic;
+  margin: 1.5rem 0;
+}
+
+/* ── Page Transition ── */
+.page-enter {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+/* ── Number font for stats ── */
+.font-num {
+  font-family: 'Montserrat', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
