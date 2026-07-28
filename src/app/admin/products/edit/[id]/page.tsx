@@ -146,9 +146,10 @@ export default function EditProductPage() {
 
   // Calculations
   const density = MATERIAL_DENSITY[form.material] || 1.24
-  const effectiveVolume = model ? model.volume_cm3 * (form.infill / 100) * 1.2 : 0
-  const weight_g = effectiveVolume * density
-  const printTimeHours = model ? (model.volume_cm3 * 0.012 * (0.2 / form.layerHeight)) : 0
+  const solidPercentage = Math.min(1.0, 0.45 + (form.infill / 100) * 0.55)
+  const effectiveVolume = model ? model.volume_cm3 * solidPercentage : 0
+  const estimated_weight_g = effectiveVolume * density
+  const estimated_print_time_hours = model ? (estimated_weight_g * 1.7 * (0.2 / form.layerHeight)) / 60 : 0
 
   let calc = null
   if (preset && model) {

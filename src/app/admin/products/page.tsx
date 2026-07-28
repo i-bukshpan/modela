@@ -86,9 +86,13 @@ export default function ProductsPage() {
 
   // Calculations for Quick Calc
   const density = MATERIAL_DENSITY[calcForm.material] || 1.24
-  const effectiveVolume = model ? model.volume_cm3 * (calcForm.infill / 100) * 1.2 : 0
+  // Slicers print thick solid walls (Perimeters/Top/Bottom). We assume at least 45% of the model is solid walls + infill for the rest.
+  const solidPercentage = Math.min(1.0, 0.45 + (calcForm.infill / 100) * 0.55)
+  const effectiveVolume = model ? model.volume_cm3 * solidPercentage : 0
   const weight_g = effectiveVolume * density
-  const printTimeHours = model ? (model.volume_cm3 * 0.012 * (0.2 / calcForm.layerHeight)) : 0
+  
+  // Real world FDM time is heavily tied to weight. Roughly 1.7 minutes per gram at 0.2mm layer height.
+  const printTimeHours = model ? (weight_g * 1.7 * (0.2 / calcForm.layerHeight)) / 60 : 0
 
   let calc = null
   if (preset && model) {

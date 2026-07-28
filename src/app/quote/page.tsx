@@ -125,13 +125,10 @@ export default function QuotePage() {
 
   const selectedMat = MATERIALS.find(m => m.value === material)!
   const density = MATERIAL_DENSITY[material] || 1.24
-
-  // Effective volume based on infill
-  const effectiveVolume = model ? model.volume_cm3 * (infill / 100) * 1.2 : 0
+  const solidPercentage = model ? Math.min(1.0, 0.45 + (infill / 100) * 0.55) : 0
+  const effectiveVolume = model ? model.volume_cm3 * solidPercentage : 0
   const weight_g = effectiveVolume * density
-
-  // Rough print time estimate: layer height & volume
-  const printTimeHours = model ? (model.volume_cm3 * 0.012 * (0.2 / layerHeight)) : 0
+  const printTimeHours = model ? (weight_g * 1.7 * (0.2 / layerHeight)) / 60 * 1.2 : 0
 
   const calc = calculatePrintCost({
     filament_cost_per_kg: selectedMat.priceKg,
