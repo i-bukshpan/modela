@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import * as THREE from 'three'
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
+import { parseSTL, estimatePrintParameters } from '@/lib/stl'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { GoldButton } from '@/components/ui/GoldButton'
@@ -25,7 +25,8 @@ export default function EditProductPage() {
     price: '',
     material: 'PLA',
     infill: 20,
-    layerHeight: 0.20
+    layerHeight: 0.20,
+    featured: false
   })
 
   const [model, setModel] = useState<any>(null)
@@ -61,7 +62,8 @@ export default function EditProductPage() {
           price: data.price ? data.price.toString() : '',
           material: data.material || 'PLA',
           infill: data.infill_percent || 20,
-          layerHeight: data.layer_height_mm || 0.20
+          layerHeight: data.layer_height_mm || 0.20,
+          featured: data.featured || false
         })
       }
       
@@ -90,42 +92,20 @@ export default function EditProductPage() {
     if (!confirm('למחוק תמונה זו?')) return
     const sb = createClient()
     await sb.from('product_media').delete().eq('id', mediaId)
-    setExistingMedia(existingMedia.filter(m => m.id !== mediaId))
+    setExistingMedia(prev => prev.filter(m => m.id !== mediaId))
   }
 
-  const parseSTL = async (file: File) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          const loader = new STLLoader()
-          const geometry = loader.parse(e.target!.result as ArrayBuffer)
-          geometry.computeBoundingBox()
-          const bbox = geometry.boundingBox!
-          const size = new THREE.Vector3()
-          bbox.getSize(size)
-
-          const pos = geometry.attributes.position
-          let volume = 0
-          for (let i = 0; i < pos.count; i += 3) {
-            const v1 = new THREE.Vector3().fromBufferAttribute(pos, i)
-            const v2 = new THREE.Vector3().fromBufferAttribute(pos, i + 1)
-            const v3 = new THREE.Vector3().fromBufferAttribute(pos, i + 2)
-            volume += v1.dot(v2.cross(v3)) / 6
-          }
-
-          const volume_cm3 = Math.abs(volume) * 0.001
-          resolve({
-            volume_cm3: +volume_cm3.toFixed(3),
-            bounding_x: +size.x.toFixed(1),
-            bounding_y: +size.y.toFixed(1),
-            bounding_z: +size.z.toFixed(1),
-            filename: file.name,
-          })
-        } catch (err) { reject(err) }
-      }
-      reader.readAsArrayBuffer(file)
-    })
+  const handleDeleteSTL = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm('האם אתה בטוח שברצונך למחוק את קובץ ה-STL?')) return
+    
+    setLoading(true)
+    const sb = createClient()
+    await sb.from('product_files').delete().eq('product_id', id).in('file_type', ['stl', 'obj'])
+    // Should also delete from storage ideally, but keeping it simple for now
+    setModel(null)
+    setStlFileObj(null)
+    setLoading(false)
   }
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -144,21 +124,22 @@ export default function EditProductPage() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'model/stl': ['.stl'] }, maxFiles: 1 })
 
-  // Calculations
   const density = MATERIAL_DENSITY[form.material] || 1.24
-  const solidPercentage = Math.min(1.0, 0.45 + (form.infill / 100) * 0.55)
-  const effectiveVolume = model ? model.volume_cm3 * solidPercentage : 0
-  const estimated_weight_g = effectiveVolume * density
-  const estimated_print_time_hours = model ? (estimated_weight_g * 1.7 * (0.2 / form.layerHeight)) / 60 : 0
+  const estimated = model 
+    ? estimatePrintParameters(model.volume_cm3, model.surface_cm2, form.infill, form.layerHeight, density)
+    : { estimated_weight_g: 0, estimated_print_time_hours: 0 }
+    
+  const estimated_weight_g = estimated.estimated_weight_g
+  const estimated_print_time_hours = estimated.estimated_print_time_hours
 
   let calc = null
   if (preset && model) {
     calc = calculatePrintCost({
       filament_cost_per_kg: 85, // Could be dynamic based on material later
-      material_weight_g: weight_g,
+      material_weight_g: estimated_weight_g,
       printer_wattage: preset.printer_wattage,
       electricity_kwh_rate: preset.electricity_kwh_rate,
-      print_time_hours: printTimeHours,
+      print_time_hours: estimated_print_time_hours,
       hourly_labor_rate: preset.hourly_labor_rate,
       failure_margin_pct: preset.failure_margin_pct,
       profit_margin_pct: preset.default_profit_margin,
@@ -194,11 +175,12 @@ export default function EditProductPage() {
       slug: form.slug,
       description: form.description,
       price: Number(form.price),
+      featured: form.featured,
       material: form.material,
       infill_percent: form.infill,
       layer_height_mm: form.layerHeight,
-      material_weight_g: weight_g,
-      print_time_min: Math.round(printTimeHours * 60),
+      material_weight_g: estimated_weight_g,
+      print_time_min: Math.round(estimated_print_time_hours * 60),
       estimated_cost: calc ? calc.total_cost : null,
     }
 
@@ -313,6 +295,17 @@ export default function EditProductPage() {
                   ))}
                 </div>
               )}
+              
+              <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/10">
+                <input 
+                  type="checkbox" 
+                  id="featured"
+                  checked={form.featured} 
+                  onChange={e => setForm({...form, featured: e.target.checked})} 
+                  className="w-5 h-5 accent-gold" 
+                />
+                <label htmlFor="featured" className="text-sm text-beige font-medium">הצג ב'פרויקטים נבחרים' בעמוד הראשי</label>
+              </div>
             </div>
           </GlassCard>
 
@@ -322,7 +315,21 @@ export default function EditProductPage() {
               <input {...getInputProps()} />
               <Upload className="w-8 h-8 text-gold mx-auto mb-4" />
               <h3 className="text-beige font-semibold mb-2">{loading ? 'מנתח...' : 'גרור קובץ STL'}</h3>
-              {model && <div className="text-xs text-status-success mt-2 flex items-center justify-center gap-1"><Check className="w-3.5 h-3.5" /> {model.filename} נטען ({model.volume_cm3} cm³)</div>}
+              {model && (
+                <div className="text-xs text-status-success mt-2 flex items-center justify-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> {model.filename} נטען ({model.volume_cm3} cm³)
+                  {!stlFileObj && (
+                    <button type="button" onClick={handleDeleteSTL} className="text-status-danger hover:text-red-400 mr-2 bg-status-danger/10 px-2 py-0.5 rounded transition-colors">
+                      ✕ מחיקה
+                    </button>
+                  )}
+                  {stlFileObj && (
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setModel(null); setStlFileObj(null); }} className="text-status-danger hover:text-red-400 mr-2 bg-status-danger/10 px-2 py-0.5 rounded transition-colors">
+                      ✕ ביטול
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </GlassCard>
         </div>

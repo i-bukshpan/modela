@@ -6,7 +6,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { Package, Plus, Search, Edit2, Trash2, Calculator, Upload, Check, X } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import * as THREE from 'three'
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
+import { parseSTL, estimatePrintParameters } from '@/lib/stl'
 import { calculatePrintCost, MATERIAL_DENSITY } from '@/lib/utils'
 
 export default function ProductsPage() {
@@ -39,35 +39,6 @@ export default function ProductsPage() {
     }
   }
 
-  const parseSTL = async (file: File) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          const loader = new STLLoader()
-          const geometry = loader.parse(e.target!.result as ArrayBuffer)
-          geometry.computeBoundingBox()
-          const bbox = geometry.boundingBox!
-          const size = new THREE.Vector3()
-          bbox.getSize(size)
-          const pos = geometry.attributes.position
-          let volume = 0
-          for (let i = 0; i < pos.count; i += 3) {
-            const v1 = new THREE.Vector3().fromBufferAttribute(pos, i)
-            const v2 = new THREE.Vector3().fromBufferAttribute(pos, i + 1)
-            const v3 = new THREE.Vector3().fromBufferAttribute(pos, i + 2)
-            volume += v1.dot(v2.cross(v3)) / 6
-          }
-          const volume_cm3 = Math.abs(volume) * 0.001
-          resolve({
-            volume_cm3: +volume_cm3.toFixed(3),
-            filename: file.name,
-          })
-        } catch (err) { reject(err) }
-      }
-      reader.readAsArrayBuffer(file)
-    })
-  }
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
@@ -84,15 +55,13 @@ export default function ProductsPage() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'model/stl': ['.stl'] }, maxFiles: 1 })
 
-  // Calculations for Quick Calc
   const density = MATERIAL_DENSITY[calcForm.material] || 1.24
-  // Slicers print thick solid walls (Perimeters/Top/Bottom). We assume at least 45% of the model is solid walls + infill for the rest.
-  const solidPercentage = Math.min(1.0, 0.45 + (calcForm.infill / 100) * 0.55)
-  const effectiveVolume = model ? model.volume_cm3 * solidPercentage : 0
-  const weight_g = effectiveVolume * density
-  
-  // Real world FDM time is heavily tied to weight. Roughly 1.7 minutes per gram at 0.2mm layer height.
-  const printTimeHours = model ? (weight_g * 1.7 * (0.2 / calcForm.layerHeight)) / 60 : 0
+  const estimated = model 
+    ? estimatePrintParameters(model.volume_cm3, model.surface_cm2, calcForm.infill, calcForm.layerHeight, density)
+    : { estimated_weight_g: 0, estimated_print_time_hours: 0 }
+    
+  const weight_g = estimated.estimated_weight_g
+  const printTimeHours = estimated.estimated_print_time_hours
 
   let calc = null
   if (preset && model) {

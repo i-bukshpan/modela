@@ -4,7 +4,7 @@ import { useDropzone } from 'react-dropzone'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as THREE from 'three'
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
+import { parseSTL, estimatePrintParameters, type ModelData } from '@/lib/stl'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { GoldButton } from '@/components/ui/GoldButton'
@@ -25,15 +25,7 @@ const MATERIALS = [
   { value: 'Resin',label: 'Resin', priceKg: 250, color: '#EC4899' },
 ]
 
-interface ModelData {
-  volume_cm3: number
-  surface_cm2: number
-  bounding_x: number
-  bounding_y: number
-  bounding_z: number
-  blob_url: string
-  filename: string
-}
+
 
 export default function QuotePage() {
   const [model, setModel] = useState<ModelData | null>(null)
@@ -61,46 +53,6 @@ export default function QuotePage() {
     loadPreset()
   }, [])
 
-  const parseSTL = async (file: File): Promise<ModelData> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          const loader = new STLLoader()
-          const geometry = loader.parse(e.target!.result as ArrayBuffer)
-          geometry.computeBoundingBox()
-          const bbox = geometry.boundingBox!
-          const size = new THREE.Vector3()
-          bbox.getSize(size)
-
-          // Volume via signed tetrahedra
-          const pos = geometry.attributes.position
-          let volume = 0
-          for (let i = 0; i < pos.count; i += 3) {
-            const v1 = new THREE.Vector3().fromBufferAttribute(pos, i)
-            const v2 = new THREE.Vector3().fromBufferAttribute(pos, i + 1)
-            const v3 = new THREE.Vector3().fromBufferAttribute(pos, i + 2)
-            volume += v1.dot(v2.cross(v3)) / 6
-          }
-
-          const scaleFactor = 0.001 // mm³ → cm³
-          const volume_cm3 = Math.abs(volume) * scaleFactor
-          const surface_cm2 = 0 // Could compute if needed
-
-          resolve({
-            volume_cm3: +volume_cm3.toFixed(3),
-            surface_cm2,
-            bounding_x: +size.x.toFixed(1),
-            bounding_y: +size.y.toFixed(1),
-            bounding_z: +size.z.toFixed(1),
-            blob_url: URL.createObjectURL(file),
-            filename: file.name,
-          })
-        } catch (err) { reject(err) }
-      }
-      reader.readAsArrayBuffer(file)
-    })
-  }
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
@@ -125,10 +77,13 @@ export default function QuotePage() {
 
   const selectedMat = MATERIALS.find(m => m.value === material)!
   const density = MATERIAL_DENSITY[material] || 1.24
-  const solidPercentage = model ? Math.min(1.0, 0.45 + (infill / 100) * 0.55) : 0
-  const effectiveVolume = model ? model.volume_cm3 * solidPercentage : 0
-  const weight_g = effectiveVolume * density
-  const printTimeHours = model ? (weight_g * 1.7 * (0.2 / layerHeight)) / 60 * 1.2 : 0
+  
+  const estimated = model 
+    ? estimatePrintParameters(model.volume_cm3, model.surface_cm2, infill, layerHeight, density)
+    : { estimated_weight_g: 0, estimated_print_time_hours: 0 }
+    
+  const weight_g = estimated.estimated_weight_g
+  const printTimeHours = estimated.estimated_print_time_hours
 
   const calc = calculatePrintCost({
     filament_cost_per_kg: selectedMat.priceKg,

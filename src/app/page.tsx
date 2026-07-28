@@ -28,6 +28,7 @@ const PROCESS_STEPS = [
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(true)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -41,6 +42,7 @@ export default function HomePage() {
       sb.from('categories').select('*').is('parent_id', null).order('sort_order', { ascending: true }).limit(6),
     ]).then(([p, t, b, c]) => {
       if (p.data) setProducts(p.data as Product[])
+      setLoadingProducts(false)
       if (t.data) setTestimonials(t.data as Testimonial[])
       if (b.data) setPosts(b.data as BlogPost[])
       if (c.data) setCategories(c.data as Category[])
@@ -271,56 +273,66 @@ export default function HomePage() {
               </GoldButton>
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.length > 0 ? products.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Link href={`/product/${product.slug}`}>
-                  <GlassCard className="overflow-hidden group cursor-pointer">
-                    <div className="relative h-52 bg-slate-surface overflow-hidden">
-                      <img
-                        src={getProductCover(product.product_media || [])}
-                        alt={product.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      {product.sale_price && (
-                        <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-status-danger/90 text-white text-xs font-bold">
-                          מבצע!
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-beige mb-1 truncate">{product.title}</h3>
-                      <div className="flex items-center gap-2">
-                        {product.sale_price ? (
-                          <>
-                            <span className="text-gold font-bold font-num">₪{product.sale_price}</span>
-                            <span className="text-beige-muted text-sm line-through font-num">₪{product.price}</span>
-                          </>
-                        ) : product.price ? (
-                          <span className="text-gold font-bold font-num">₪{product.price}</span>
-                        ) : null}
-                        {product.material && (
-                          <span className="mr-auto text-xs text-beige-muted bg-white/5 px-2 py-0.5 rounded-full">
-                            {product.material}
+          {loadingProducts ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="skeleton h-64 rounded-2xl" />
+              ))}
+            </div>
+          ) : products.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Link href={`/product/${product.slug}`}>
+                    <GlassCard className="overflow-hidden group cursor-pointer">
+                      <div className="relative h-52 bg-slate-surface overflow-hidden">
+                        <img
+                          src={getProductCover(product.product_media || [])}
+                          alt={product.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        {product.sale_price && (
+                          <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-status-danger/90 text-white text-xs font-bold">
+                            מבצע!
                           </span>
                         )}
                       </div>
-                    </div>
-                  </GlassCard>
-                </Link>
-              </motion.div>
-            )) : (
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="skeleton h-64 rounded-2xl" />
-              ))
-            )}
-          </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-beige mb-1 truncate">{product.title}</h3>
+                        <div className="flex items-center gap-2">
+                          {product.sale_price ? (
+                            <>
+                              <span className="text-gold font-bold font-num">₪{product.sale_price}</span>
+                              <span className="text-beige-muted text-sm line-through font-num">₪{product.price}</span>
+                            </>
+                          ) : product.price ? (
+                            <span className="text-gold font-bold font-num">₪{product.price}</span>
+                          ) : null}
+                          {product.material && (
+                            <span className="mr-auto text-xs text-beige-muted bg-white/5 px-2 py-0.5 rounded-full">
+                              {product.material}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </GlassCard>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 glass-heavy rounded-3xl border border-white/10 w-full col-span-full">
+              <Box className="w-12 h-12 text-beige-muted mx-auto mb-4 opacity-50" />
+              <h3 className="text-xl font-bold text-beige mb-2">אין פרויקטים נבחרים</h3>
+              <p className="text-beige-muted text-sm">ניתן לסמן מוצרים כ"פרויקט נבחר" מממשק הניהול.</p>
+            </div>
+          )}
         </div>
       </section>
 

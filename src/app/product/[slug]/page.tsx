@@ -308,11 +308,9 @@ export default function ProductPage({ params }: Props) {
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <button onClick={() => setShowOrderModal(true)} className="flex-1">
-              <GoldButton className="w-full" size="lg">
-                <Send className="w-5 h-5" /> הזמן עכשיו
-              </GoldButton>
-            </button>
+            <GoldButton onClick={() => setShowOrderModal(true)} className="w-full flex-1" size="lg">
+              <Send className="w-5 h-5" /> הזמן עכשיו
+            </GoldButton>
             <a href={`https://wa.me/972500000000?text=שלום, אני מעוניין במוצר: ${product.title}`} target="_blank" className="flex-1">
               <GoldButton variant="secondary" className="w-full" size="lg">
                 WhatsApp

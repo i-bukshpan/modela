@@ -1,4 +1,5 @@
 'use client'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -8,7 +9,7 @@ import {
   Box, LayoutDashboard, Package, Layers, ClipboardList,
   TrendingDown, BarChart2, MessageSquare, Mail, BookOpen,
   Settings, LogOut, Calculator, ChevronLeft, AlertTriangle,
-  DollarSign
+  DollarSign, Menu, X
 } from 'lucide-react'
 
 const ADMIN_LINKS = [
@@ -27,6 +28,12 @@ const ADMIN_LINKS = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const [isOpen, setIsOpen] = useState(false)
+
+  // Close sidebar on route change on mobile
+  useEffect(() => {
+    setIsOpen(false)
+  }, [pathname])
 
   const handleLogout = async () => {
     const sb = createClient()
@@ -35,8 +42,29 @@ export function AdminSidebar() {
   }
 
   return (
-    <aside className="fixed right-0 top-0 h-full w-56 glass-heavy border-l border-white/10 flex flex-col z-40 pt-4 pb-6">
-      {/* Logo */}
+    <>
+      {/* Mobile Toggle Button */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="md:hidden fixed top-3 left-4 z-50 p-2 rounded-xl glass-heavy text-beige border border-white/10"
+      >
+        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={cn(
+        "fixed right-0 top-0 h-full w-56 glass-heavy border-l border-white/10 flex flex-col z-50 pt-4 pb-6 transition-transform duration-300",
+        isOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+      )}>
+        {/* Logo */}
       <Link href="/" className="flex items-center gap-2.5 px-4 py-3 mb-2">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center">
           <Box className="w-4 h-4 text-slate-canvas" strokeWidth={2.5} />
@@ -84,5 +112,6 @@ export function AdminSidebar() {
         </button>
       </div>
     </aside>
+    </>
   )
 }

@@ -33,7 +33,7 @@ export default function SettingsPage() {
       if (error && error.code === '42P01') {
         setError('יש להריץ את סקריפט התקנת מסד הנתונים עבור טבלת site_settings.')
       } else if (data && data.value) {
-        setStats(data.value)
+        setStats(prev => ({...prev, ...data.value}))
       }
       
       const { data: presetData } = await sb.from('cost_presets').select('*').eq('is_default', true).maybeSingle()
