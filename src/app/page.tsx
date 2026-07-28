@@ -50,7 +50,10 @@ export default function HomePage() {
       // Load homepage stats
       sb.from('site_settings').select('value').eq('key', 'homepage_stats').maybeSingle().then(({ data }) => {
         if (data && data.value) {
-          setStats(data.value)
+          try {
+            const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value
+            setStats(parsed)
+          } catch(e) {}
         }
       })
     })

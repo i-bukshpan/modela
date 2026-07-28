@@ -9,7 +9,7 @@ import {
   Box, LayoutDashboard, Package, Layers, ClipboardList,
   TrendingDown, BarChart2, MessageSquare, Mail, BookOpen,
   Settings, LogOut, Calculator, ChevronLeft, AlertTriangle,
-  DollarSign, Menu, X
+  DollarSign, Menu, X, Printer
 } from 'lucide-react'
 
 const ADMIN_LINKS = [
@@ -19,6 +19,7 @@ const ADMIN_LINKS = [
   { href: '/admin/jobs',         label: 'תור הדפסות',     icon: ClipboardList },
   { href: '/admin/finances',     label: 'ניהול כספים',    icon: DollarSign },
   { href: '/admin/analytics',    label: 'ניתוח פיננסי',   icon: BarChart2 },
+  { href: '/admin/printers',     label: 'מדפסות',         icon: Printer },
   { href: '/admin/comments',     label: 'תגובות',          icon: MessageSquare },
   { href: '/admin/messages',     label: 'הודעות קשר',      icon: Mail },
   { href: '/admin/blog',         label: 'בלוג',            icon: BookOpen },

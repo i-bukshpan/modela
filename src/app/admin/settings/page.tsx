@@ -33,7 +33,10 @@ export default function SettingsPage() {
       if (error && error.code === '42P01') {
         setError('יש להריץ את סקריפט התקנת מסד הנתונים עבור טבלת site_settings.')
       } else if (data && data.value) {
-        setStats(prev => ({...prev, ...data.value}))
+        try {
+          const parsedValue = typeof data.value === 'string' ? JSON.parse(data.value) : data.value
+          setStats(prev => ({...prev, ...parsedValue}))
+        } catch(e) {}
       }
       
       const { data: presetData } = await sb.from('cost_presets').select('*').eq('is_default', true).maybeSingle()
@@ -53,9 +56,9 @@ export default function SettingsPage() {
     
     const { data } = await sb.from('site_settings').select('id').eq('key', 'homepage_stats').maybeSingle()
     if (data) {
-      await sb.from('site_settings').update({ value: stats }).eq('key', 'homepage_stats')
+      await sb.from('site_settings').update({ value: JSON.stringify(stats) }).eq('key', 'homepage_stats')
     } else {
-      await sb.from('site_settings').insert([{ key: 'homepage_stats', value: stats }])
+      await sb.from('site_settings').insert([{ key: 'homepage_stats', value: JSON.stringify(stats) }])
     }
     
     setSaving(false)

@@ -286,6 +286,7 @@ export default function NewProductPage() {
                   <option value="PLA">PLA</option>
                   <option value="PETG">PETG</option>
                   <option value="TPU">TPU</option>
+                  <option value="ABS">ABS</option>
                 </select>
               </div>
               <div>
