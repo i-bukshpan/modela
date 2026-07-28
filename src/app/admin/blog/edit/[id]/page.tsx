@@ -31,7 +31,8 @@ export default function EditBlogPostPage() {
     excerpt: '',
     content: '',
     status: 'draft',
-    tags: ''
+    tags: '',
+    cover_image: ''
   })
 
   // Auto-generate slug from title
@@ -55,7 +56,8 @@ export default function EditBlogPostPage() {
           excerpt: data.excerpt || '',
           content: data.content || '',
           status: data.status || 'draft',
-          tags: data.tags ? data.tags.join(', ') : ''
+          tags: data.tags ? data.tags.join(', ') : '',
+          cover_image: data.cover_image || ''
         })
       }
     }
