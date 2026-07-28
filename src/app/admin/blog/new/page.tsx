@@ -42,6 +42,27 @@ export default function NewBlogPostPage() {
     setForm({ ...form, title, slug })
   }
 
+  const handleContentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSaving(true)
+      try {
+        const file = await processImageFile(e.target.files[0])
+        const sb = createClient()
+        const ext = file.name.split('.').pop()
+        const filename = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`
+        const { data } = await sb.storage.from('blog-images').upload(`content/${filename}`, file)
+        if (data) {
+          const { data: { publicUrl } } = sb.storage.from('blog-images').getPublicUrl(`content/${filename}`)
+          setForm(prev => ({...prev, content: prev.content + `<br/><img src="${publicUrl}" style="max-width:100%; border-radius: 8px; margin: 16px auto; display: block;" /><br/>`}))
+        }
+      } catch (err) {
+        console.error(err)
+      }
+      setSaving(false)
+      e.target.value = ''
+    }
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -137,6 +158,13 @@ export default function NewBlogPostPage() {
             <label className="block text-sm text-beige-muted mb-1">תוכן המאמר</label>
             <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden [&_.rsw-editor]:min-h-[300px] [&_.rsw-editor]:text-beige [&_.rsw-toolbar]:bg-slate-900 [&_.rsw-toolbar]:border-white/10 [&_.rsw-btn]:text-beige">
               <Editor value={form.content} onChange={e => setForm({...form, content: e.target.value})} />
+            </div>
+            <div className="mt-2 text-left">
+              <label className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-beige cursor-pointer transition-colors">
+                <ImageIcon className="w-4 h-4" />
+                העלאת תמונה לגוף הפוסט
+                <input type="file" accept="image/*,.heic" onChange={handleContentImageUpload} className="hidden" />
+              </label>
             </div>
           </div>
 

@@ -39,6 +39,9 @@ export default function ProductPage({ params }: Props) {
   const [orderForm, setOrderForm] = useState({ name: '', phone: '', email: '', notes: '' })
   const [ordering, setOrdering] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState(false)
+  
+  // Image enlarge modal state
+  const [enlargedMediaUrl, setEnlargedMediaUrl] = useState<string | null>(null)
 
   useEffect(() => {
     const sb = createClient()
@@ -57,9 +60,6 @@ export default function ProductPage({ params }: Props) {
       sb.from('product_files').select('*').eq('product_id', p.id).then(({ data: fData }) => {
         if (fData) {
           setFiles(fData as ProductFile[])
-          if (fData.some((f: ProductFile) => f.file_type === 'stl' || f.file_type === 'obj' || f.filename?.toLowerCase().endsWith('.stl'))) {
-            setShowViewer(true)
-          }
         }
       })
 
@@ -76,10 +76,12 @@ export default function ProductPage({ params }: Props) {
     const sb = createClient()
     const saved = JSON.parse(localStorage.getItem('modela-liked') || '[]')
     if (liked) {
+      setProduct(p => p ? { ...p, like_count: (p.like_count || 1) - 1 } : p)
       await sb.rpc('decrement_product_like', { p_id: product.id })
       setLiked(false)
       localStorage.setItem('modela-liked', JSON.stringify(saved.filter((id: string) => id !== product.id)))
     } else {
+      setProduct(p => p ? { ...p, like_count: (p.like_count || 0) + 1 } : p)
       await sb.rpc('increment_product_like', { p_id: product.id })
       setLiked(true)
       localStorage.setItem('modela-liked', JSON.stringify([...saved, product.id]))
@@ -129,6 +131,19 @@ export default function ProductPage({ params }: Props) {
       setOrderSuccess(false)
       setOrderForm({ name: '', phone: '', email: '', notes: '' })
     }, 3000)
+  }
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: product?.title,
+        text: product?.description || '',
+        url: window.location.href,
+      }).catch(console.error)
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+      alert('הקישור הועתק ללוח!')
+    }
   }
 
   if (loading) return (
@@ -225,12 +240,17 @@ export default function ProductPage({ params }: Props) {
           ) : (
             <>
               {/* Main image */}
-              <GlassCard className="overflow-hidden mb-3 h-96">
+              <GlassCard className="overflow-hidden mb-3 h-96 relative group">
                 {currentMedia ? (
                   currentMedia.type === 'video' ? (
                     <video src={currentMedia.url} controls className="w-full h-full object-contain" />
                   ) : (
-                    <img src={currentMedia.url} alt={product.title} className="w-full h-full object-contain" />
+                    <div className="w-full h-full cursor-pointer relative" onClick={() => setEnlargedMediaUrl(currentMedia.url)}>
+                      <img src={currentMedia.url} alt={product.title} className="w-full h-full object-contain" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                        <Maximize2 className="w-8 h-8 text-white drop-shadow-md" />
+                      </div>
+                    </div>
                   )
                 ) : (
                   <div className="flex items-center justify-center h-full text-beige-muted">
@@ -278,7 +298,7 @@ export default function ProductPage({ params }: Props) {
               <span className="font-num">{product.like_count}</span> לייקים
             </button>
             <button
-              onClick={() => navigator.clipboard.writeText(window.location.href)}
+              onClick={handleShare}
               className="flex items-center gap-1.5 hover:text-gold transition-colors"
             >
               <Share2 className="w-4 h-4" /> שיתוף
@@ -460,6 +480,16 @@ export default function ProductPage({ params }: Props) {
               </>
             )}
           </GlassCard>
+        </div>
+      )}
+
+      {/* Enlarge Image Modal */}
+      {enlargedMediaUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setEnlargedMediaUrl(null)}>
+          <button className="absolute top-4 right-4 text-white hover:text-gold transition-colors z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          <img src={enlargedMediaUrl} alt="Enlarged view" className="max-w-full max-h-[90vh] object-contain rounded-lg" onClick={e => e.stopPropagation()} />
         </div>
       )}
     </div>

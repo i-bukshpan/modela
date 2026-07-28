@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { formatDateHe } from '@/lib/utils'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Badge } from '@/components/ui/Badge'
+import { ShareButton } from '@/components/ui/ShareButton'
 import { BookOpen, Calendar, Eye } from 'lucide-react'
 import type { Metadata } from 'next'
 
@@ -64,6 +65,7 @@ export default async function BlogPostPage({ params }: Props) {
       <div className="flex items-center gap-5 text-sm text-beige-muted mb-8 pb-4 border-b border-white/10">
         <span className="flex items-center gap-1.5 font-num"><Calendar className="w-4 h-4" /> {formatDateHe(post.created_at)}</span>
         <span className="flex items-center gap-1.5 font-num"><Eye className="w-4 h-4" /> {post.view_count} צפיות</span>
+        <ShareButton title={post.title} text={post.excerpt} />
       </div>
 
       {/* Content */}
