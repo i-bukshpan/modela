@@ -5,12 +5,24 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { GoldButton } from '@/components/ui/GoldButton'
-import { ChevronRight, Save, Image as ImageIcon } from 'lucide-react'
+import { Save, ChevronRight, Image as ImageIcon } from 'lucide-react'
+import { processImageFile } from '@/lib/imageUtils'
 
 export default function NewBlogPostPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
+  
+  const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const processed = await processImageFile(file)
+      setCoverImageFile(processed)
+    } else {
+      setCoverImageFile(null)
+    }
+  }
+
   const [form, setForm] = useState({
     title: '',
     slug: '',
@@ -111,7 +123,7 @@ export default function NewBlogPostPage() {
                   <ImageIcon className="w-6 h-6" />
                 )}
               </div>
-              <input type="file" accept="image/*" onChange={e => setCoverImageFile(e.target.files?.[0] || null)} className="w-full glass rounded-xl px-4 py-2.5 text-beige outline-none border border-white/10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/20 file:text-gold hover:file:bg-gold/30" />
+              <input type="file" accept="image/*,.heic" onChange={handleCoverImageChange} className="w-full glass rounded-xl px-4 py-2.5 text-beige outline-none border border-white/10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/20 file:text-gold hover:file:bg-gold/30" />
             </div>
           </div>
 

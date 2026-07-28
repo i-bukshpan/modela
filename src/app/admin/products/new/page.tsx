@@ -7,8 +7,9 @@ import { parseSTL, estimatePrintParameters } from '@/lib/stl'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { GoldButton } from '@/components/ui/GoldButton'
-import { Upload, Calculator, Save, ChevronRight, Check } from 'lucide-react'
+import { Upload, Calculator, Save, ChevronRight, Check, Trash2 } from 'lucide-react'
 import { calculatePrintCost, MATERIAL_DENSITY } from '@/lib/utils'
+import { processImageFiles } from '@/lib/imageUtils'
 import Link from 'next/link'
 
 export default function NewProductPage() {
@@ -28,8 +29,8 @@ export default function NewProductPage() {
     featured: false
   })
 
-  const [model, setModel] = useState<any>(null)
-  const [stlFileObj, setStlFileObj] = useState<File | null>(null)
+  const [models, setModels] = useState<any[]>([])
+  const [stlFileObjs, setStlFileObjs] = useState<File[]>([])
   const [galleryFiles, setGalleryFiles] = useState<File[]>([])
   const [preset, setPreset] = useState<any>(null)
 
@@ -50,32 +51,52 @@ export default function NewProductPage() {
   }, [])
 
 
+  const handleGalleryChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return
+    const files = Array.from(e.target.files)
+    const processed = await processImageFiles(files)
+    setGalleryFiles(processed)
+  }
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0]
-    if (!file) return
+    if (!acceptedFiles.length) return
     setLoading(true)
     try {
-      const data = await parseSTL(file)
-      setModel(data)
-      setStlFileObj(file)
+      const newModels: any[] = []
+      const newFiles: File[] = []
+      for (const file of acceptedFiles) {
+        const data = await parseSTL(file)
+        newModels.push(data)
+        newFiles.push(file)
+      }
+      setModels(prev => [...prev, ...newModels])
+      setStlFileObjs(prev => [...prev, ...newFiles])
     } catch (e) {
-      alert('שגיאה בניתוח הקובץ')
+      alert('שגיאה בניתוח אחד או יותר מהקבצים')
     }
     setLoading(false)
   }, [])
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'model/stl': ['.stl'] }, maxFiles: 1 })
+  const removeStl = (index: number) => {
+    setModels(prev => prev.filter((_, i) => i !== index))
+    setStlFileObjs(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'model/stl': ['.stl'] }, maxFiles: 0 })
 
   const density = MATERIAL_DENSITY[form.material] || 1.24
-  const estimated = model 
-    ? estimatePrintParameters(model.volume_cm3, model.surface_cm2, form.infill, form.layerHeight, density)
+  const totalVolume = models.reduce((acc, m) => acc + m.volume_cm3, 0)
+  const totalSurface = models.reduce((acc, m) => acc + (m.surface_cm2 || 0), 0)
+
+  const estimated = models.length > 0 
+    ? estimatePrintParameters(totalVolume, totalSurface, form.infill, form.layerHeight, density)
     : { estimated_weight_g: 0, estimated_print_time_hours: 0 }
     
   const weight_g = estimated.estimated_weight_g
   const printTimeHours = estimated.estimated_print_time_hours
 
   let calc = null
-  if (preset && model) {
+  if (preset && models.length > 0) {
     calc = calculatePrintCost({
       filament_cost_per_kg: 85, // Could be dynamic based on material later
       material_weight_g: weight_g,
@@ -142,28 +163,31 @@ export default function NewProductPage() {
       await sb.from('product_media').insert(mediaInserts)
     }
 
-    if (model) {
-      let stlFileUrl = 'uploaded_via_admin'
-      if (stlFileObj) {
-        const ext = stlFileObj.name.split('.').pop()
+    if (models.length > 0 && stlFileObjs.length > 0) {
+      for (let i = 0; i < stlFileObjs.length; i++) {
+        const file = stlFileObjs[i]
+        const m = models[i]
+        const ext = file.name.split('.').pop()
         const fileName = `stl-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
-        const { data: uploadData } = await sb.storage.from('products').upload(fileName, stlFileObj)
+        const { data: uploadData } = await sb.storage.from('products').upload(fileName, file)
+        
+        let stlFileUrl = 'uploaded_via_admin'
         if (uploadData) {
           const { data: publicUrlData } = sb.storage.from('products').getPublicUrl(fileName)
           stlFileUrl = publicUrlData.publicUrl
         }
-      }
 
-      await sb.from('product_files').insert([{
-        product_id: product.id,
-        filename: model.filename,
-        file_url: stlFileUrl,
-        mesh_volume_cm3: model.volume_cm3,
-        bounding_x_mm: model.bounding_x,
-        bounding_y_mm: model.bounding_y,
-        bounding_z_mm: model.bounding_z,
-        file_type: 'stl'
-      }])
+        await sb.from('product_files').insert([{
+          product_id: product.id,
+          filename: m.filename,
+          file_url: stlFileUrl,
+          mesh_volume_cm3: m.volume_cm3,
+          bounding_x_mm: m.bounding_x,
+          bounding_y_mm: m.bounding_y,
+          bounding_z_mm: m.bounding_z,
+          file_type: 'stl'
+        }])
+      }
     }
 
     router.push('/admin/products')
@@ -197,7 +221,7 @@ export default function NewProductPage() {
             </div>
             <div>
               <label className="block text-sm text-beige-muted mb-1">תמונות מוצר (ניתן לבחור מספר קבצים)</label>
-              <input type="file" multiple accept="image/*" onChange={e => setGalleryFiles(Array.from(e.target.files || []))} className="w-full glass rounded-xl px-4 py-2.5 text-beige outline-none border border-white/10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/20 file:text-gold hover:file:bg-gold/30" />
+              <input type="file" multiple accept="image/*,.heic" onChange={handleGalleryChange} className="w-full glass rounded-xl px-4 py-2.5 text-beige outline-none border border-white/10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/20 file:text-gold hover:file:bg-gold/30" />
               {galleryFiles.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {galleryFiles.map((f, i) => (
@@ -227,16 +251,24 @@ export default function NewProductPage() {
             <div {...getRootProps()} className={`p-8 text-center cursor-pointer transition-all glass rounded-2xl border ${isDragActive ? 'border-gold/60 bg-gold/5' : 'border-white/10 hover:border-gold/30'}`}>
               <input {...getInputProps()} />
               <Upload className="w-8 h-8 text-gold mx-auto mb-4" />
-              <h3 className="text-beige font-semibold mb-2">{loading ? 'מנתח...' : 'גרור קובץ STL'}</h3>
-              {model && (
-                <div className="text-xs text-status-success mt-2 flex items-center justify-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> {model.filename} נטען ({model.volume_cm3} cm³)
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setModel(null); setStlFileObj(null); }} className="text-status-danger hover:text-red-400 mr-2 bg-status-danger/10 px-2 py-0.5 rounded transition-colors">
-                    ✕ ביטול
-                  </button>
-                </div>
-              )}
+              <h3 className="text-beige font-semibold mb-2">{loading ? 'מנתח...' : 'גרור קבצי STL לכאן'}</h3>
             </div>
+            {models.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {models.map((m, idx) => (
+                  <div key={idx} className="text-xs flex items-center justify-between bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+                    <div className="flex items-center gap-2 text-status-success">
+                      <Check className="w-3.5 h-3.5" /> 
+                      <span className="truncate max-w-[200px]">{m.filename}</span>
+                      <span className="text-beige-muted">({m.volume_cm3} cm³)</span>
+                    </div>
+                    <button type="button" onClick={() => removeStl(idx)} className="text-status-danger hover:text-red-400 p-1 bg-status-danger/10 rounded transition-colors" title="מחק קובץ">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </GlassCard>
         </div>
 

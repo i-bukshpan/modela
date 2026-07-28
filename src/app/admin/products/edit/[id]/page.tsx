@@ -7,8 +7,9 @@ import { parseSTL, estimatePrintParameters } from '@/lib/stl'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { GoldButton } from '@/components/ui/GoldButton'
-import { Upload, Calculator, Save, ChevronRight, Check } from 'lucide-react'
+import { Upload, Calculator, Save, ChevronRight, Check, Trash2 } from 'lucide-react'
 import { calculatePrintCost, MATERIAL_DENSITY } from '@/lib/utils'
+import { processImageFiles } from '@/lib/imageUtils'
 import Link from 'next/link'
 
 export default function EditProductPage() {
@@ -29,8 +30,9 @@ export default function EditProductPage() {
     featured: false
   })
 
-  const [model, setModel] = useState<any>(null)
-  const [stlFileObj, setStlFileObj] = useState<File | null>(null)
+  const [models, setModels] = useState<any[]>([])
+  const [stlFileObjs, setStlFileObjs] = useState<File[]>([])
+  const [existingStls, setExistingStls] = useState<any[]>([])
   const [existingMedia, setExistingMedia] = useState<any[]>([])
   const [galleryFiles, setGalleryFiles] = useState<File[]>([])
   const [preset, setPreset] = useState<any>(null)
@@ -69,16 +71,8 @@ export default function EditProductPage() {
       
       const { data: files } = await sb.from('product_files').select('*').eq('product_id', id)
       if (files && files.length > 0) {
-        const stl = files.find(f => f.file_type === 'stl' || f.file_type === 'obj' || f.filename?.toLowerCase().endsWith('.stl'))
-        if (stl) {
-          setModel({
-            filename: stl.filename,
-            volume_cm3: stl.mesh_volume_cm3 || 0,
-            bounding_x: stl.bounding_x_mm || 0,
-            bounding_y: stl.bounding_y_mm || 0,
-            bounding_z: stl.bounding_z_mm || 0,
-          })
-        }
+        const stls = files.filter(f => f.file_type === 'stl' || f.file_type === 'obj' || f.filename?.toLowerCase().endsWith('.stl'))
+        setExistingStls(stls)
       }
       const { data: mediaFiles } = await sb.from('product_media').select('*').eq('product_id', id).order('sort_order', { ascending: true })
       if (mediaFiles) {
@@ -95,45 +89,62 @@ export default function EditProductPage() {
     setExistingMedia(prev => prev.filter(m => m.id !== mediaId))
   }
 
-  const handleDeleteSTL = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!confirm('האם אתה בטוח שברצונך למחוק את קובץ ה-STL?')) return
-    
+  const handleDeleteSTL = async (fileId: string, index: number, isExisting: boolean) => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק קובץ זה?')) return
     setLoading(true)
-    const sb = createClient()
-    await sb.from('product_files').delete().eq('product_id', id).in('file_type', ['stl', 'obj'])
-    // Should also delete from storage ideally, but keeping it simple for now
-    setModel(null)
-    setStlFileObj(null)
+    if (isExisting) {
+      const sb = createClient()
+      await sb.from('product_files').delete().eq('id', fileId)
+      setExistingStls(prev => prev.filter(f => f.id !== fileId))
+    } else {
+      setModels(prev => prev.filter((_, i) => i !== index))
+      setStlFileObjs(prev => prev.filter((_, i) => i !== index))
+    }
     setLoading(false)
   }
 
+  const handleGalleryChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return
+    const files = Array.from(e.target.files)
+    const processed = await processImageFiles(files)
+    setGalleryFiles(processed)
+  }
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0]
-    if (!file) return
+    if (!acceptedFiles.length) return
     setLoading(true)
     try {
-      const data = await parseSTL(file)
-      setModel(data)
-      setStlFileObj(file)
+      const newModels: any[] = []
+      const newFiles: File[] = []
+      for (const file of acceptedFiles) {
+        const data = await parseSTL(file)
+        newModels.push(data)
+        newFiles.push(file)
+      }
+      setModels(prev => [...prev, ...newModels])
+      setStlFileObjs(prev => [...prev, ...newFiles])
     } catch (e) {
-      alert('שגיאה בניתוח הקובץ')
+      alert('שגיאה בניתוח אחד או יותר מהקבצים')
     }
     setLoading(false)
   }, [])
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'model/stl': ['.stl'] }, maxFiles: 1 })
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'model/stl': ['.stl'] }, maxFiles: 0 })
 
   const density = MATERIAL_DENSITY[form.material] || 1.24
-  const estimated = model 
-    ? estimatePrintParameters(model.volume_cm3, model.surface_cm2, form.infill, form.layerHeight, density)
+  const totalVolume = models.reduce((acc, m) => acc + m.volume_cm3, 0) + existingStls.reduce((acc, f) => acc + (f.mesh_volume_cm3 || 0), 0)
+  const totalSurface = models.reduce((acc, m) => acc + (m.surface_cm2 || 0), 0)
+
+  // If there are files, estimate params
+  const estimated = (models.length > 0 || existingStls.length > 0)
+    ? estimatePrintParameters(totalVolume, totalSurface, form.infill, form.layerHeight, density)
     : { estimated_weight_g: 0, estimated_print_time_hours: 0 }
     
   const estimated_weight_g = estimated.estimated_weight_g
   const estimated_print_time_hours = estimated.estimated_print_time_hours
 
   let calc = null
-  if (preset && model) {
+  if (preset && (models.length > 0 || existingStls.length > 0)) {
     calc = calculatePrintCost({
       filament_cost_per_kg: 85, // Could be dynamic based on material later
       material_weight_g: estimated_weight_g,
@@ -208,34 +219,32 @@ export default function EditProductPage() {
       }
     }
 
-    if (model && stlFileObj) {
-      let stlFileUrl = ''
-      const ext = stlFileObj.name.split('.').pop()
-      const fileName = `stl-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
-      const { data: uploadData } = await sb.storage.from('products').upload(fileName, stlFileObj)
-      if (uploadData) {
-        const { data: publicUrlData } = sb.storage.from('products').getPublicUrl(fileName)
-        stlFileUrl = publicUrlData.publicUrl
-      }
-      
-      if (stlFileUrl) {
-        // Delete old STL entries for this product
-        await sb.from('product_files')
-          .delete()
-          .eq('product_id', product.id)
-          .in('file_type', ['stl', 'obj'])
-
-        // Insert new
-        await sb.from('product_files').insert([{
-          product_id: product.id,
-          filename: model.filename,
-          file_url: stlFileUrl,
-          mesh_volume_cm3: model.volume_cm3,
-          bounding_x_mm: model.bounding_x,
-          bounding_y_mm: model.bounding_y,
-          bounding_z_mm: model.bounding_z,
-          file_type: 'stl'
-        }])
+    if (models.length > 0 && stlFileObjs.length > 0) {
+      for (let i = 0; i < stlFileObjs.length; i++) {
+        const file = stlFileObjs[i]
+        const m = models[i]
+        const ext = file.name.split('.').pop()
+        const fileName = `stl-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
+        const { data: uploadData } = await sb.storage.from('products').upload(fileName, file)
+        
+        let stlFileUrl = ''
+        if (uploadData) {
+          const { data: publicUrlData } = sb.storage.from('products').getPublicUrl(fileName)
+          stlFileUrl = publicUrlData.publicUrl
+        }
+        
+        if (stlFileUrl) {
+          await sb.from('product_files').insert([{
+            product_id: product.id,
+            filename: m.filename,
+            file_url: stlFileUrl,
+            mesh_volume_cm3: m.volume_cm3,
+            bounding_x_mm: m.bounding_x,
+            bounding_y_mm: m.bounding_y,
+            bounding_z_mm: m.bounding_z,
+            file_type: 'stl'
+          }])
+        }
       }
     }
 
@@ -284,7 +293,7 @@ export default function EditProductPage() {
               )}
               
               <label className="block text-sm text-beige-muted mb-1">הוסף תמונות חדשות</label>
-              <input type="file" multiple accept="image/*" onChange={e => setGalleryFiles(Array.from(e.target.files || []))} className="w-full glass rounded-xl px-4 py-2.5 text-beige outline-none border border-white/10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/20 file:text-gold hover:file:bg-gold/30" />
+              <input type="file" multiple accept="image/*,.heic" onChange={handleGalleryChange} className="w-full glass rounded-xl px-4 py-2.5 text-beige outline-none border border-white/10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/20 file:text-gold hover:file:bg-gold/30" />
               {galleryFiles.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {galleryFiles.map((f, i) => (
@@ -314,23 +323,37 @@ export default function EditProductPage() {
             <div {...getRootProps()} className={`p-8 text-center cursor-pointer transition-all glass rounded-2xl border ${isDragActive ? 'border-gold/60 bg-gold/5' : 'border-white/10 hover:border-gold/30'}`}>
               <input {...getInputProps()} />
               <Upload className="w-8 h-8 text-gold mx-auto mb-4" />
-              <h3 className="text-beige font-semibold mb-2">{loading ? 'מנתח...' : 'גרור קובץ STL'}</h3>
-              {model && (
-                <div className="text-xs text-status-success mt-2 flex items-center justify-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> {model.filename} נטען ({model.volume_cm3} cm³)
-                  {!stlFileObj && (
-                    <button type="button" onClick={handleDeleteSTL} className="text-status-danger hover:text-red-400 mr-2 bg-status-danger/10 px-2 py-0.5 rounded transition-colors">
-                      ✕ מחיקה
-                    </button>
-                  )}
-                  {stlFileObj && (
-                    <button type="button" onClick={(e) => { e.stopPropagation(); setModel(null); setStlFileObj(null); }} className="text-status-danger hover:text-red-400 mr-2 bg-status-danger/10 px-2 py-0.5 rounded transition-colors">
-                      ✕ ביטול
-                    </button>
-                  )}
-                </div>
-              )}
+              <h3 className="text-beige font-semibold mb-2">{loading ? 'מנתח...' : 'גרור קבצי STL נוספים לכאן'}</h3>
             </div>
+            {(existingStls.length > 0 || models.length > 0) && (
+              <div className="mt-4 space-y-2">
+                {existingStls.map((f, idx) => (
+                  <div key={f.id} className="text-xs flex items-center justify-between bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+                    <div className="flex items-center gap-2 text-status-success">
+                      <Check className="w-3.5 h-3.5" /> 
+                      <span className="truncate max-w-[200px]">{f.filename}</span>
+                      <span className="text-beige-muted">({f.mesh_volume_cm3 || 0} cm³)</span>
+                    </div>
+                    <button type="button" onClick={() => handleDeleteSTL(f.id, idx, true)} className="text-status-danger hover:text-red-400 p-1 bg-status-danger/10 rounded transition-colors" title="מחק קובץ">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {models.map((m, idx) => (
+                  <div key={`new-${idx}`} className="text-xs flex items-center justify-between bg-white/5 px-3 py-2 rounded-lg border border-gold/30">
+                    <div className="flex items-center gap-2 text-status-success">
+                      <Check className="w-3.5 h-3.5" /> 
+                      <span className="truncate max-w-[200px]">{m.filename}</span>
+                      <span className="text-beige-muted">({m.volume_cm3} cm³)</span>
+                      <span className="bg-gold/20 text-gold px-1.5 py-0.5 rounded text-[10px]">חדש</span>
+                    </div>
+                    <button type="button" onClick={() => handleDeleteSTL('', idx, false)} className="text-status-danger hover:text-red-400 p-1 bg-status-danger/10 rounded transition-colors" title="מחק קובץ">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </GlassCard>
         </div>
 

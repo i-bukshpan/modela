@@ -28,6 +28,7 @@ export default function ProductPage({ params }: Props) {
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
   const [mediaIdx, setMediaIdx] = useState(0)
+  const [activeStlIdx, setActiveStlIdx] = useState(0)
   const [showViewer, setShowViewer] = useState(false)
   const [liked, setLiked] = useState(false)
   const [commentSent, setCommentSent] = useState(false)
@@ -147,9 +148,9 @@ export default function ProductPage({ params }: Props) {
   const media = (product.product_media || []).sort((a, b) => a.sort_order - b.sort_order)
   const currentMedia = media[mediaIdx]
   
-  // Find STL file, ignoring the old 'uploaded_via_admin' placeholders if possible
+  // Find STL files, ignoring the old 'uploaded_via_admin' placeholders if possible
   const validStlFiles = files.filter(f => (f.file_type === 'stl' || f.file_type === 'obj' || f.filename?.toLowerCase().endsWith('.stl')) && f.file_url !== 'uploaded_via_admin')
-  const stlFile = validStlFiles.length > 0 ? validStlFiles[0] : files.find(f => f.file_type === 'stl' || f.file_type === 'obj' || f.filename?.toLowerCase().endsWith('.stl'))
+  const stlFile = validStlFiles.length > 0 ? validStlFiles[activeStlIdx] : files.find(f => f.file_type === 'stl' || f.file_type === 'obj' || f.filename?.toLowerCase().endsWith('.stl'))
 
   const SPECS = [
     { icon: Box, label: 'חומר', value: product.material },
@@ -197,12 +198,30 @@ export default function ProductPage({ params }: Props) {
           </div>
 
           {showViewer && stlFile ? (
-            <ThreeModelViewer
-              fileUrl={stlFile.file_url}
-              fileType={stlFile.file_type}
-              colorHex={product.material_color_hex || '#C97E2A'}
-              className="h-96"
-            />
+            <div className="flex flex-col gap-3">
+              <ThreeModelViewer
+                fileUrl={stlFile.file_url}
+                fileType={stlFile.file_type}
+                colorHex={product.material_color_hex || '#C97E2A'}
+                className="h-96"
+              />
+              {validStlFiles.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {validStlFiles.map((f, i) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setActiveStlIdx(i)}
+                      className={cn('flex-shrink-0 px-4 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center gap-2',
+                        i === activeStlIdx ? 'border-gold bg-gold/10 text-gold' : 'border-transparent glass text-beige-muted hover:text-beige hover:bg-white/5'
+                      )}
+                    >
+                      <Box className="w-4 h-4" />
+                      <span className="truncate max-w-[120px]">{f.filename || `מודל ${i + 1}`}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <>
               {/* Main image */}
