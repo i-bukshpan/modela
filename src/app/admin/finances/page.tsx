@@ -15,6 +15,7 @@ export default function FinancesPage() {
     category: '',
     amount: '',
     date: new Date().toISOString().split('T')[0],
+    notes: ''
   })
   const [editingId, setEditingId] = useState<string | null>(null)
 
@@ -42,7 +43,8 @@ export default function FinancesPage() {
         title: form.title,
         category: form.category,
         amount: Number(form.amount),
-        date: form.date
+        date: form.date,
+        notes: form.notes
       }).eq('id', editingId)
       
       if (error) {
@@ -54,7 +56,8 @@ export default function FinancesPage() {
         title: form.title,
         category: form.category,
         amount: Number(form.amount),
-        date: form.date
+        date: form.date,
+        notes: form.notes
       }])
       
       if (error) {
@@ -63,7 +66,7 @@ export default function FinancesPage() {
       }
     }
     
-    setForm({ ...form, title: '', amount: '' })
+    setForm({ ...form, title: '', amount: '', notes: '' })
     setEditingId(null)
     loadData()
   }
@@ -81,7 +84,8 @@ export default function FinancesPage() {
       title: entry.title,
       category: entry.category,
       amount: entry.amount,
-      date: entry.date
+      date: entry.date,
+      notes: entry.notes || ''
     })
     setEditingId(entry.id)
   }
@@ -159,12 +163,16 @@ export default function FinancesPage() {
               <label className="block text-xs text-beige-muted mb-1">תאריך</label>
               <input required type="date" value={form.date} onChange={e=>setForm({...form, date: e.target.value})} className="w-full glass rounded-lg px-3 py-2 text-sm text-beige outline-none border border-white/10 focus:border-gold/50 [color-scheme:dark]" />
             </div>
+            <div>
+              <label className="block text-xs text-beige-muted mb-1">הערות</label>
+              <textarea rows={2} value={form.notes} onChange={e=>setForm({...form, notes: e.target.value})} className="w-full glass rounded-lg px-3 py-2 text-sm text-beige outline-none border border-white/10 focus:border-gold/50" />
+            </div>
             <div className="flex gap-2 mt-2">
               <GoldButton type="submit" className="flex-1">
                 {editingId ? 'עדכן רשומה' : 'הוסף רשומה'}
               </GoldButton>
               {editingId && (
-                <button type="button" onClick={() => { setEditingId(null); setForm({ ...form, title: '', amount: '' }) }} className="px-4 py-2 glass rounded-xl text-beige-muted hover:text-beige">
+                <button type="button" onClick={() => { setEditingId(null); setForm({ ...form, title: '', amount: '', notes: '' }) }} className="px-4 py-2 glass rounded-xl text-beige-muted hover:text-beige">
                   ביטול
                 </button>
               )}
@@ -207,7 +215,10 @@ export default function FinancesPage() {
                   {entries.map(e => (
                     <tr key={e.id} className="hover:bg-white/5 transition-colors">
                       <td className="p-4 text-beige-muted">{new Date(e.date).toLocaleDateString('he-IL')}</td>
-                      <td className="p-4 text-beige">{e.title}</td>
+                      <td className="p-4 text-beige">
+                        <div>{e.title}</div>
+                        {e.notes && <div className="text-xs text-beige-muted mt-1 whitespace-pre-wrap">{e.notes}</div>}
+                      </td>
                       <td className="p-4 text-beige-muted">
                         <span className="px-2 py-1 rounded-md bg-white/5 text-xs">{e.category}</span>
                       </td>
