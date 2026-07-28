@@ -12,9 +12,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const unwrapped = await params
   const slug = decodeURIComponent(unwrapped.slug)
   const sb = await createClient()
-  const { data } = await sb.from('blog_posts').select('title,excerpt').eq('slug', slug).single()
+  const { data } = await sb.from('blog_posts').select('title,excerpt,cover_image').eq('slug', slug).single()
   if (!data) return {}
-  return { title: data.title, description: data.excerpt || undefined }
+  return {
+    title: data.title,
+    description: data.excerpt || undefined,
+    openGraph: {
+      title: data.title,
+      description: data.excerpt || undefined,
+      images: data.cover_image ? [data.cover_image] : []
+    }
+  }
 }
 
 export default async function BlogPostPage({ params }: Props) {

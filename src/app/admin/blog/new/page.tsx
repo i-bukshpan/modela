@@ -7,6 +7,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { GoldButton } from '@/components/ui/GoldButton'
 import { Save, ChevronRight, Image as ImageIcon } from 'lucide-react'
 import { processImageFile } from '@/lib/imageUtils'
+import Editor from 'react-simple-wysiwyg'
 
 export default function NewBlogPostPage() {
   const router = useRouter()
@@ -133,8 +134,10 @@ export default function NewBlogPostPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-beige-muted mb-1">תוכן המאמר (Markdown / Text)</label>
-            <textarea required rows={12} value={form.content} onChange={e => setForm({...form, content: e.target.value})} className="w-full glass rounded-xl px-4 py-2.5 text-beige outline-none border border-white/10 focus:border-gold/50" />
+            <label className="block text-sm text-beige-muted mb-1">תוכן המאמר</label>
+            <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden [&_.rsw-editor]:min-h-[300px] [&_.rsw-editor]:text-beige [&_.rsw-toolbar]:bg-slate-900 [&_.rsw-toolbar]:border-white/10 [&_.rsw-btn]:text-beige">
+              <Editor value={form.content} onChange={e => setForm({...form, content: e.target.value})} />
+            </div>
           </div>
 
           <div>
